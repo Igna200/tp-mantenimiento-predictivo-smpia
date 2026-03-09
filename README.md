@@ -1,16 +1,38 @@
-# Guia Práctica
+# Trabajo Práctico: Sistema de Mantenimiento Predictivo de Activos Industriales (SMPIA)
 
-## Tema: Template
+## Situación Hipotética
 
-### Ejercicio 1
+En el vertiginoso mundo de la industria moderna, la eficiencia operativa y la minimización del tiempo de inactividad son factores críticos para el éxito. **Industrias Futuro S.A.**, una pujante empresa manufacturera con múltiples plantas de producción, enfrenta el desafío constante de mantener su maquinaria funcionando a pleno rendimiento. Un fallo inesperado en una línea de producción puede significar pérdidas millonarias, retrasos en la entrega y un impacto negativo en la reputación.
 
-Realiza una funcion que retorne la cadena `"hola_mundo"`
+Para combatir esto, la gerencia ha decidido invertir en la implementación de un **Sistema de Mantenimiento Predictivo Inteligente de Activos (SMPIA)**. Este sistema tiene como objetivo principal monitorear proactivamente la salud de la maquinaria, anticipar posibles fallos y optimizar la planificación de las tareas de mantenimiento, pasando de un modelo reactivo a uno predictivo y preventivo.
 
-```python
-# Este es un ejemplo de codigo python
-print(tu_funcion())
-```
-Imprime por pantalla
-```
-hola_mundo
-```
+Cada equipo crucial en las plantas de Industrias Futuro S.A. (como prensas hidráulicas, robots de ensamblaje, hornos de fundición y líneas de empaquetado) está equipado con una red de **dispositivos de medición inteligentes**. Estos dispositivos recolectan datos en tiempo real sobre diversas variables operacionales: temperatura, vibración, presión, consumo energético, etc. Estos datos son continuamente transmitidos al SMPIA.
+
+El corazón del sistema reside en su capacidad de analizar estas lecturas. Cuando los valores reportados por un **dispositivo de medición** exceden ciertos umbrales predefinidos, o muestran patrones anómalos que podrían indicar una falla inminente, el sistema automáticamente dispara un **aviso**. Estos avisos son clasificados según su severidad (ej. "Advertencia", "Crítica") y contienen información detallada sobre el equipo afectado, el dispositivo de medición que la originó y los parámetros anómalos.
+
+Una vez generado un aviso, o de acuerdo a un cronograma preestablecido para el mantenimiento preventivo, el SMPIA elabora un **programa de intervención**. Estos programas detallan las acciones a seguir, los **componentes de recambio** necesarios y estiman el tiempo requerido. Un equipo de **personal especializado**, cada uno con su propia área de experticia (ej. mecánica, electrónica, hidráulica), es asignado para ejecutar estos programas.
+
+Todo el proceso, desde la detección de una anomalía hasta la resolución de un problema o la ejecución de un mantenimiento planificado, debe quedar meticulosamente registrado. Esto incluye un **historial de eventos** que documenta cada incidente, su causa, los componentes de recambio utilizados y la intervención del personal. Esta información es vital para el análisis de tendencias, la mejora continua y la optimización de los ciclos de vida de la **maquinaria**.
+
+El desafío para ustedes, como ingenieros en formación, es diseñar y construir un modelo de software robusto que represente este sistema. Deberá ser flexible, permitiendo la incorporación de nuevas clases de dispositivos de medición, lógicas de predicción más complejas o la gestión de nuevas categorías de componentes de recambio en el futuro, sin requerir una reingeniería completa. Esto implica una cuidadosa abstracción para identificar elementos comunes y sus especializaciones, así como la capacidad de diferentes elementos para responder de manera adecuada a las mismas interacciones. La clave está en una buena modelización que permita manejar situaciones imprevistas de manera controlada y asegurar la fiabilidad del comportamiento del sistema.
+
+## Requerimientos Técnicos Obligatorios
+
+Es obligatorio utilizar Programación Orientada a Objetos (POO) para la resolución de este problema, aplicando sus principios para modelar y gestionar las diversas interacciones del sistema.
+
+## Reglas de Negocio
+
+1.  Cada pieza de la maquinaria debe tener una identificación única, no debe faltar, y no puede duplicarse. Inicialmente, al ser registrada, se considera plenamente operativa.
+2.  Los dispositivos de medición están siempre ligados a una pieza de maquinaria específica, monitoreando un tipo particular de variable y con un límite a partir del cual se considera una lectura inusual. Cuando un dispositivo de medición reporta un valor que supera el límite predefinido, y si no hay un aviso crítico activo ya generado para ese dispositivo, el sistema debe generar una nueva notificación de urgencia y activarla.
+3.  La maquinaria puede tener distintos estados: plenamente operativa, en proceso de mantenimiento o con una falla declarada. Estos estados solo pueden cambiarse deliberadamente a través de acciones específicas del sistema. No se pueden registrar lecturas de los dispositivos de medición para maquinaria que ya se ha declarado con una falla o que está en proceso de mantenimiento; si se intenta, el sistema debe señalar esta situación inadecuada. Además, una pieza de maquinaria no puede considerarse "plenamente operativa" si aún tiene avisos críticos activos o programas de intervención correctivos pendientes de ejecutar.
+4.  Un aviso puede estar activo o resuelto. Solo se considera resuelto si el personal capacitado lo desactiva explícitamente o si un programa de intervención correctivo asociado se ha completado, momento en el cual se debe registrar la fecha de su resolución.
+5.  Existen dos tipos de programas de intervención: los preventivos, que son programados periódicamente, y los correctivos, que son disparados por un aviso. Un programa correctivo debe estar necesariamente asociado a un aviso activo.
+6.  Al intentar iniciar la ejecución de un programa de intervención que necesite componentes de recambio, el sistema debe verificar si hay suficiente disponibilidad de cada componente solicitado en el inventario. Si algún componente no está disponible o el inventario es insuficiente, el sistema debe indicar que no es posible proceder.
+7.  El personal capacitado tiene áreas de conocimiento específicas. Solo pueden ser asignados a un programa de intervención o ejecutarlo si su especialidad coincide con los requisitos de la maquinaria o la naturaleza de la anomalía. De lo contrario, el sistema debe señalar la incompatibilidad del personal.
+8.  Cada vez que una maquinaria pasa a un estado de falla o se completa un programa de intervención de tipo correctivo, es fundamental que quede un registro detallado en el historial de eventos, detallando la fecha, la descripción del problema, el personal que intervino y los componentes de recambio utilizados. Al finalizar un programa de intervención correctivo, el aviso asociado debe resolverse automáticamente, y la maquinaria implicada debe volver a considerarse plenamente operativa (si no hay otras condiciones que lo impidan).
+
+## Notas
+- Se prohíbe el uso de la librería pandas; el objetivo es evaluar el manejo de estructuras nativas (listas, diccionarios) y la lógica de algoritmos manuales.
+- Es requisito obligatorio presentar un diagrama de flujo previo a la codificación para organizar la arquitectura lógica y prevenir fallos de diseño.
+- Cada implementación debe estar debidamente sustentada; el alumno debe ser capaz de explicar y justificar técnicamente las decisiones tomadas en el código.
+- Se recomienda el uso de la librería estándar de Python (como datetime o math) para optimizar tareas específicas y evitar la redacción innecesaria de funciones ya existentes.
