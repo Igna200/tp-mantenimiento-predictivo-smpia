@@ -58,17 +58,13 @@ class DispositivoMedicion:
         self.tipo_de_variable = tipo_de_variable
         self.umbral_limite = umbral_limite
         self.aviso_activo = aviso_activo
-class HistorialDeEventos:           #Poner una validacion para que el evento que estamos metiendo en el historia ya esté cerrado
+class Eventos:           #Poner una validacion para que el evento que estamos metiendo en el historia ya esté cerrado
     def __init__(self,fecha,evento,descripcion,personal):
         self.fecha=fecha
         self.evento=evento
         self.descripcion=descripcion
         self.personal=personal
-    
-class EstadoMaquinaria:
-    def __init__(self,estado):
-        self.estado=estado    
-    
+
     
     
     
