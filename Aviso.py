@@ -11,3 +11,11 @@ class Aviso:
         self.estado=estado
         self.fecha_creacion=fecha_creacion
         self.fecha_cierre=fecha_cierre
+
+    def set_estado(self, estado):       #Metodo de instancia, no lleva decorador
+        pass
+
+    def set_estado_aviso(self, ?):      #Repasar que seria el estado aviso para saber que poner como parametro
+        pass
+
+    
