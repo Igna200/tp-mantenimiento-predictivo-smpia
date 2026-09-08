@@ -12,3 +12,4 @@ class ProgramaIntervencion:
         pass
 
     def asignar_personal():      #idem
+        pass
