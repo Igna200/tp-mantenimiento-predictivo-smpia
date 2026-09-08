@@ -4,3 +4,5 @@ class DispositivoMedicion:
         self.tipo_de_variable = tipo_de_variable
         self.umbral_limite = umbral_limite
         self.aviso_activo = aviso_activo
+
+    #No se pueden registrar mediciones si la maquinaria no está plen. operativa
