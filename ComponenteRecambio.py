@@ -7,5 +7,12 @@ class ComponenteRecambio:
     def get_stock(self):
         return self.cantidad
 
-    def actualizar_stock(self):
-        pass
+    def descontar_stock(self, cantidad_descontar: int):
+        if self.cantidad - cantidad_descontar < 0:
+            raise ValueError("No hay suficiente stock disponible para realizar la operación")
+        self.cantidad -= cantidad_descontar
+    
+    def setter_agregar_stock(self, cantidad_a_sumar:int):
+        if cantidad_a_sumar <= 0:
+            raise ValueError("La cantidad a agregar debe ser mayor a cero.")
+        self.cantidad += cantidad_a_sumar

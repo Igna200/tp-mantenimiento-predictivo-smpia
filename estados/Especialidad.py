@@ -1,7 +1,7 @@
 from enum import Enum 
 class Especialidad(Enum):
-    mecanico="Mecanico"
-    electronico= "Electronico"
-    hidraulico="Hidraulico"
+    mecanico="MECANICO"
+    electronico= "ELECTRONICO"
+    hidraulico="HIDRAULICO"
     
     

@@ -1,14 +1,17 @@
 import datetime
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
+from Maquinaria import Maquinaria
 
 class Aviso:
     id_counter=0
-    def __init__(self, severidad: EstadoSeveridad, equipo_afectado, dispositivo_que_detecto, parametro_anomalo, estado=EstadoAviso.ACTIVO, fecha_cierre=None, fecha_creacion=None):
+    def __init__(self, severidad: EstadoSeveridad, equipo_afectado: Maquinaria, dispositivo_que_detecto, parametro_anomalo, estado=EstadoAviso.ACTIVO, fecha_cierre=None, fecha_creacion=None):
         if not isinstance(severidad, EstadoSeveridad):
             raise TypeError("severidad debe ser una instancia de EstadoSeveridad")
         if not isinstance(estado, EstadoAviso):
             raise TypeError("estado debe ser una instancia de EstadoAviso")
+        if not isinstance(equipo_afectado, Maquinaria):
+            raise TypeError("equipo_afectado debe ser una instancia de Maquinaria")
 
         self.id_aviso=Aviso.id_counter
         Aviso.id_counter+=1
@@ -19,6 +22,8 @@ class Aviso:
         self.estado=estado
         self.fecha_creacion=fecha_creacion if fecha_creacion is not None else datetime.date.today()
         self.fecha_cierre=fecha_cierre
+
+        self.equipo_afectado.agregar_aviso(self)
 
     def cerrar_aviso(self):
         if self.estado != EstadoAviso.ACTIVO:
