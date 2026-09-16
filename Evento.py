@@ -16,6 +16,8 @@ class Evento:
         self.descripcion = descripcion
         self.personal = personal
         self.componentes_utilizados = componentes_utilizados
+        if componentes_utilizados is None:
+            self.componentes_utilizados = []
         
     def __str__(self):
         nombres_personal = ", ".join(p.nombre for p in self.personal)

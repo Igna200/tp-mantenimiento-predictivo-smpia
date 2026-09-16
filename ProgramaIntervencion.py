@@ -4,6 +4,8 @@ from Maquinaria import Maquinaria
 import datetime
 
 class ProgramaIntervencion:
+    es_correctivo = False   # las hijas correctivas lo pisan en True (Maquinaria lo usa para "correctivos pendientes")
+
     def __init__(self, maquinaria: Maquinaria,procedimiento, componentes_requeridos: dict,
                  tiempo_requerido, especialidad_requerida):
         if not isinstance(maquinaria, Maquinaria):
@@ -34,6 +36,12 @@ class ProgramaIntervencion:
     def set_estado(self, estado):
         if not isinstance(estado, EstadoProgramaIntervencion):
             raise TypeError("El estado debe ser una instancia de Estado_ProgramaIntervencion")
+
+        if estado == EstadoProgramaIntervencion.EN_EJECUCION:
+            self.chequear_stock()  # levanta ValueError si falta algún componente; no se procede
+            for componente, cantidad_necesaria in self.componentes_requeridos.items():
+                componente.descontar_stock(cantidad_necesaria)  # reserva el stock para este programa
+
         self.estado = estado
 
     def asignar_personal(self, tecnico):

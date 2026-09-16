@@ -1,4 +1,5 @@
 import datetime
+from ProgramaIntervencion import ProgramaIntervencion
 from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
 class ProgramaPreventivo(ProgramaIntervencion):
     def __init__(self,maquinaria, procedimiento, componentes_requeridos, tiempo_requerido,especialidad_requerida, periodicidad, tipo_equipo):

@@ -12,9 +12,6 @@ def main():
 
 # "Base de datos" en memoria
     sistema = SIMPIA()
-    maquinas = []
-    personal = []
-    componentes = []
 
 
     def menu_principal():
@@ -72,20 +69,21 @@ def main():
     def registrar_maquinaria():
         id_unico = input("ID único de la maquinaria: ")
 
-        if any(m.id_unico == id_unico for m in maquinas):
-            print("Error: ya existe una maquinaria con ese ID.")
+        nueva = Maquinaria(id_unico)
+        try:
+            sistema.registrar_maquinaria(nueva)
+        except ValueError as e:
+            print(f"Error: {e}")
             return
 
-        nueva = Maquinaria(id_unico)
-        maquinas.append(nueva)
         print(f"Maquinaria {id_unico} registrada como Plenamente Operativa.")
 
 
     def listar_maquinaria():
-        if not maquinas:
+        if not sistema.maquinas:
             print("No hay maquinaria registrada.")
             return
-        for m in maquinas:
+        for m in sistema.maquinas:
             print(f"ID: {m.id_unico} | Estado: {m.estado.value}")
 
 
@@ -111,11 +109,21 @@ def main():
 
 
     def ver_avisos():
-        pass  # placeholder
+        avisos = sistema.listar_avisos()
+        if not avisos:
+            print("No hay avisos registrados.")
+            return
+        for aviso in avisos:
+            print(aviso)
 
 
     def ver_historial():
-        pass  # placeholder
+        eventos = sistema.listar_historial_eventos()
+        if not eventos:
+            print("No hay eventos registrados.")
+            return
+        for evento in eventos:
+            print(evento)
 
 # No cambiar a partir de aqui
 if __name__ == "__main__":
