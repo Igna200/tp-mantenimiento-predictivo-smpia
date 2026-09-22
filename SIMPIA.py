@@ -39,3 +39,5 @@ class SIMPIA:
 
     def listar_historial_eventos(self):
         return [evento for maquinaria in self.maquinas for evento in maquinaria.historial]
+
+    

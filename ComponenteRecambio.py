@@ -17,4 +17,4 @@ class ComponenteRecambio:
     def setter_agregar_stock(self, cantidad_a_sumar:int):
         if cantidad_a_sumar <= 0:
             raise ValueError("La cantidad a agregar debe ser mayor a cero.")
-        self.cantidad += cantidad_a_sumar
+        self.cantidad += cantidad_a_sumar  

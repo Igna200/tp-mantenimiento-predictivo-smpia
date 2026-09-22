@@ -2,13 +2,19 @@ from estados.EstadoMaquinaria import EstadoMaquinaria
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
 from Aviso import Aviso
+from Maquinaria import Maquinaria
 class DispositivoMedicion:
-    def __init__(self, id: int, maquinaria, tipo_de_variable: str, umbral_limite: float):
+    def __init__(self, id: int, maquinaria: Maquinaria, tipo_de_variable: str, umbral_limite: float):
+        if not isinstance(maquinaria, Maquinaria):
+            raise TypeError("maquinaria debe ser una instancia de Maquinaria")
+
         self.id = id
         self.maquinaria = maquinaria
         self.tipo_de_variable = tipo_de_variable
         self.umbral_limite = umbral_limite
         self.avisos_generados = []  # reemplaza al booleano aviso_activo
+
+        self.maquinaria.agregar_dispositivo(self)
 
     def hay_aviso_critico_activo(self):
         return any(

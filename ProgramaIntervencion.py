@@ -4,21 +4,20 @@ from Maquinaria import Maquinaria
 import datetime
 
 class ProgramaIntervencion:
-    es_correctivo = False   # las hijas correctivas lo pisan en True (Maquinaria lo usa para "correctivos pendientes")
+    es_correctivo = False
 
-    def __init__(self, maquinaria: Maquinaria,procedimiento, componentes_requeridos: dict,
+    def __init__(self, maquinaria: Maquinaria, procedimiento, componentes_requeridos: dict,
                  tiempo_requerido, especialidad_requerida):
         if not isinstance(maquinaria, Maquinaria):
             raise TypeError("maquinaria debe ser una instancia de Maquinaria")
 
-        self.maquinaria=maquinaria
+        self.maquinaria = maquinaria
         self.procedimiento = procedimiento
-        self.componentes_requeridos = componentes_requeridos  # {ComponenteRecambio: cantidad}
+        self.componentes_requeridos = componentes_requeridos
         self.tiempo_requerido = tiempo_requerido
         self.especialidad_requerida = especialidad_requerida
         self.estado = EstadoProgramaIntervencion.PROGRAMADO
         self.personal_asignado = []
-
         self.maquinaria.agregar_programa(self)
 
     def chequear_stock(self):
@@ -35,15 +34,12 @@ class ProgramaIntervencion:
 
     def set_estado(self, estado):
         if not isinstance(estado, EstadoProgramaIntervencion):
-            raise TypeError("El estado debe ser una instancia de Estado_ProgramaIntervencion")
-
-
-    def asignar_personal():      #idem
+            raise TypeError("El estado debe ser una instancia de EstadoProgramaIntervencion")
 
         if estado == EstadoProgramaIntervencion.EN_EJECUCION:
-            self.chequear_stock()  # levanta ValueError si falta algún componente; no se procede
+            self.chequear_stock()
             for componente, cantidad_necesaria in self.componentes_requeridos.items():
-                componente.descontar_stock(cantidad_necesaria)  # reserva el stock para este programa
+                componente.descontar_stock(cantidad_necesaria)
 
         self.estado = estado
 
@@ -54,8 +50,6 @@ class ProgramaIntervencion:
                 f"el técnico tiene {tecnico.especialidad}"
             )
         self.personal_asignado.append(tecnico)
-    
-    # En ProgramaIntervencion (clase base)
 
     def finalizar(self):
         if self.estado == EstadoProgramaIntervencion.COMPLETADO:
@@ -65,22 +59,18 @@ class ProgramaIntervencion:
 
         evento = Evento(
             fecha=datetime.date.today(),
-            descripcion=self._generar_descripcion_evento(),
+            descripcion=self.generar_descripcion_evento(),
             personal=self.personal_asignado,
             componentes_utilizados=list(self.componentes_requeridos.keys())
         )
 
         self.maquinaria.historial.append(evento)
-
-        self._acciones_especificas_al_finalizar()
+        self.acciones_especificas_al_finalizar()
 
         return evento
 
     def generar_descripcion_evento(self):
-        # Las hijas la sobreescriben; esto es un fallback
-        return f"Intervención sobre {self.tipo_equipo}"
+        return f"Intervención sobre maquinaria {self.maquinaria.id_unico}"
 
     def acciones_especificas_al_finalizar(self):
-        # Las hijas la sobreescriben si necesitan hacer algo extra
-
         pass

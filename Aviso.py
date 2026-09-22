@@ -33,4 +33,4 @@ class Aviso:
 
     def __repr__(self):
         return (f"Aviso(id={self.id_aviso}, severidad={self.severidad.value}, "
-                f"estado={self.estado.value}, equipo={self.equipo_afectado})")
+                f"estado={self.estado.value}, equipo={self.equipo_afectado.id_unico})")

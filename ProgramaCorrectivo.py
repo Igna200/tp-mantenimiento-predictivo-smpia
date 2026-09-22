@@ -15,10 +15,10 @@ class ProgramaCorrectivo(ProgramaIntervencion):
         self.tipo_equipo = tipo_equipo
     # En ProgramaCorrectivo
 
-    def _generar_descripcion_evento(self):
+    def generar_descripcion_evento(self):
         return f"Corrección de {self.tipo_equipo}: {self.aviso_asociado.parametro_anomalo}"
 
-    def _acciones_especificas_al_finalizar(self):
+    def acciones_especificas_al_finalizar(self):
         self.aviso_asociado.cerrar_aviso()
         try:
             self.maquinaria.set_estado_maquinaria(EstadoMaquinaria.PLENAMENTE_OPERATIVA)

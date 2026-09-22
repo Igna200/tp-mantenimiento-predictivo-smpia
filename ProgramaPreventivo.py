@@ -23,10 +23,10 @@ class ProgramaPreventivo(ProgramaIntervencion):
         return self.fecha_programada
     # En ProgramaPreventivo
 
-    def _generar_descripcion_evento(self):
+    def generar_descripcion_evento(self):
         return f"Mantenimiento preventivo periódico de {self.tipo_equipo}"
 
-    def _acciones_especificas_al_finalizar(self):
+    def acciones_especificas_al_finalizar(self):
         self.fecha_ultima_ejecucion = datetime.date.today()
         self.programar_siguiente()
 
