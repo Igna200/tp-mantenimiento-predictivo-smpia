@@ -37,9 +37,9 @@ class ProgramaIntervencion:
         if not isinstance(estado, EstadoProgramaIntervencion):
             raise TypeError("El estado debe ser una instancia de Estado_ProgramaIntervencion")
 
-<
+
     def asignar_personal():      #idem
-=======
+
         if estado == EstadoProgramaIntervencion.EN_EJECUCION:
             self.chequear_stock()  # levanta ValueError si falta algún componente; no se procede
             for componente, cantidad_necesaria in self.componentes_requeridos.items():
@@ -82,5 +82,5 @@ class ProgramaIntervencion:
 
     def acciones_especificas_al_finalizar(self):
         # Las hijas la sobreescriben si necesitan hacer algo extra
->>>>>>> 0e80439fee0d5ad2e7ab40f760a8c120cf169571
+
         pass
