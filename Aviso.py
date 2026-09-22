@@ -2,6 +2,7 @@ import datetime
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
 from Maquinaria import Maquinaria
+from PersonalEspecializado import PersonalEspecializado
 
 class Aviso:
     id_counter=0

@@ -8,6 +8,8 @@ class ComponenteRecambio:
         return self.cantidad
 
     def descontar_stock(self, cantidad_descontar: int):
+        if cantidad_descontar <= 0:
+            raise ValueError("La cantidad a descontar debe ser mayor a cero")
         if self.cantidad - cantidad_descontar < 0:
             raise ValueError("No hay suficiente stock disponible para realizar la operación")
         self.cantidad -= cantidad_descontar

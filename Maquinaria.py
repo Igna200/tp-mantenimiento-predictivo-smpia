@@ -37,7 +37,7 @@ class Maquinaria:
         if nuevo_estado not in EstadoMaquinaria:
             raise ValueError ("El nuevo estado no es válido")       #Es correcto ValueError? O conviene otro?
         if nuevo_estado == EstadoMaquinaria.PLENAMENTE_OPERATIVA and (self.existe_aviso_critico_activo or self.existe_programa_correctivo_pendiente):
-            raise Exception ("Hay un aviso pendiente sin resolver")
+            raise ValueError ("Hay un aviso pendiente sin resolver")
         if nuevo_estado == EstadoMaquinaria.PLENAMENTE_OPERATIVA:
             #pasar lo necesario a historial de eventos (Punto 8)
             pass
