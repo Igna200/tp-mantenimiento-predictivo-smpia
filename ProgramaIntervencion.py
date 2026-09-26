@@ -2,9 +2,11 @@ from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
 from Evento import Evento
 from Maquinaria import Maquinaria
 import datetime
+#probando
 
 class ProgramaIntervencion:
     es_correctivo = False
+
 
     def __init__(self, maquinaria: Maquinaria, procedimiento, componentes_requeridos: dict,
                  tiempo_requerido, especialidad_requerida):
