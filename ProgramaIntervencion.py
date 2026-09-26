@@ -37,8 +37,16 @@ class ProgramaIntervencion:
     def set_estado(self, estado):
         if not isinstance(estado, EstadoProgramaIntervencion):
             raise TypeError("El estado debe ser una instancia de EstadoProgramaIntervencion")
-
         if estado == EstadoProgramaIntervencion.EN_EJECUCION:
+            # Regla 7: el personal también tiene que ser compatible para EJECUTAR
+            if not self.personal_asignado:
+                raise ValueError("No hay personal asignado para ejecutar el programa")
+            for tecnico in self.personal_asignado:
+                if tecnico.especialidad != self.especialidad_requerida:
+                    raise ValueError(
+                        f"Personal incompatible: {tecnico.nombre} no tiene la especialidad "
+                        f"{self.especialidad_requerida.value}"
+                    )
             self.chequear_stock()
             for componente, cantidad_necesaria in self.componentes_requeridos.items():
                 componente.descontar_stock(cantidad_necesaria)
@@ -54,6 +62,8 @@ class ProgramaIntervencion:
         self.personal_asignado.append(tecnico)
 
     def finalizar(self):
+        if self.estado != EstadoProgramaIntervencion.EN_EJECUCION:
+            raise ValueError("Solo se puede finalizar un programa que está en ejecución")        
         if self.estado == EstadoProgramaIntervencion.COMPLETADO:
             raise ValueError("El programa ya fue completado anteriormente")
 
