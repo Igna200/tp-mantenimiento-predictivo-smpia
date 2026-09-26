@@ -3,6 +3,7 @@ from Maquinaria import Maquinaria
 from estados.EstadoMaquinaria import EstadoMaquinaria
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
+from EventoFalla import EventoFalla
 
 
 
@@ -40,15 +41,16 @@ def test_cambio_estado_invalido_lanza_value_error():
 def test_cambio_estado_exitoso_sin_bloqueos():
     maquina = Maquinaria(id_unico=101)
 
-    # Le pasamos tanto la descripción como la lista de personal requerida
+    # Le pasamos la descripción y la causa requerida para EventoFalla
     maquina.set_estado_maquinaria(
         EstadoMaquinaria.FALLA_DECLARADA,
         descripcion_falla="Filtro tapado",
-        personal=["Tecnico_01"]
+        causa="Acumulacion de residuos en el filtro"
     )
     assert maquina.estado == EstadoMaquinaria.FALLA_DECLARADA
     assert len(maquina.historial) == 1  # Verifica que registró el Evento en el historial
-
+    assert isinstance(maquina.historial[0], EventoFalla)
+    
     # Volvemos a PLENAMENTE_OPERATIVA (como no hay bloqueos, debe funcionar)
     maquina.set_estado_maquinaria(EstadoMaquinaria.PLENAMENTE_OPERATIVA)
     assert maquina.estado == EstadoMaquinaria.PLENAMENTE_OPERATIVA

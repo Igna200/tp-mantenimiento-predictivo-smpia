@@ -57,20 +57,10 @@ class ProgramaIntervencion:
 
         self.estado = EstadoProgramaIntervencion.COMPLETADO
 
-        evento = Evento(
-            fecha=datetime.date.today(),
-            descripcion=self.generar_descripcion_evento(),
-            personal=self.personal_asignado,
-            componentes_utilizados=list(self.componentes_requeridos.keys())
-        )
-
+        evento = self.crear_evento_especifico()
         self.maquinaria.historial.append(evento)
-        self.acciones_especificas_al_finalizar()
 
         return evento
-
-    def generar_descripcion_evento(self):
-        return f"Intervención sobre maquinaria {self.maquinaria.id_unico}"
-
-    def acciones_especificas_al_finalizar(self):
-        pass
+    
+    def crear_evento_especifico(self):
+        raise NotImplementedError("Las clases hijas deben implementar crear_evento_especifico")

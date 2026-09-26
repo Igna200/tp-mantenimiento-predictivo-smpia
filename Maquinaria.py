@@ -3,7 +3,7 @@ from estados.EstadoMaquinaria import EstadoMaquinaria
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
 from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
-from Evento import Evento
+from EventoFalla import EventoFalla
 
 class Maquinaria:
     def __init__(self, id_unico, fecha_ultimo_mantenimiento: datetime.date = None, historial=None, estado=EstadoMaquinaria.PLENAMENTE_OPERATIVA):
@@ -39,27 +39,26 @@ class Maquinaria:
         self.dispositivos.append(dispositivo)
 
     def set_estado_maquinaria(self, nuevo_estado: EstadoMaquinaria, descripcion_falla: str = None,
-                               personal: list = None, componentes_utilizados: list = None):
+                            causa: str = None, dispositivo_origen=None):
         if nuevo_estado not in EstadoMaquinaria:
-            raise ValueError ("El nuevo estado no es válido")       #Es correcto ValueError? O conviene otro?
+            raise ValueError("El nuevo estado no es válido")
 
         if nuevo_estado == EstadoMaquinaria.PLENAMENTE_OPERATIVA:
             if self.existe_aviso_critico_activo or self.existe_programa_correctivo_pendiente:
-                raise ValueError ("Hay un aviso pendiente sin resolver")
+                raise ValueError("Hay un aviso pendiente sin resolver")
 
         if nuevo_estado == EstadoMaquinaria.FALLA_DECLARADA:
-            #Punto 8: al pasar a un estado de falla, queda registro en el historial de eventos
             if not descripcion_falla:
                 raise ValueError("Debe indicar una descripción de la falla")
-            if not personal:
-                raise ValueError("Debe indicar el personal que detectó/declaró la falla")
+            if not causa:
+                raise ValueError("Debe indicar la causa de la falla")
 
-            evento = Evento(
+            evento = EventoFalla(
                 fecha=datetime.date.today(),
                 descripcion=descripcion_falla,
-                personal=personal,
-                componentes_utilizados=componentes_utilizados or [],
+                causa=causa,
+                dispositivo_origen=dispositivo_origen
             )
             self.historial.append(evento)
 
-        self.estado=nuevo_estado
+        self.estado = nuevo_estado

@@ -1,5 +1,6 @@
 import datetime
 from ProgramaIntervencion import ProgramaIntervencion
+from EventoPreventivo import EventoPreventivo
 from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
 class ProgramaPreventivo(ProgramaIntervencion):
     def __init__(self,maquinaria, procedimiento, componentes_requeridos, tiempo_requerido,especialidad_requerida, periodicidad, tipo_equipo):
@@ -23,12 +24,18 @@ class ProgramaPreventivo(ProgramaIntervencion):
         return self.fecha_programada
     # En ProgramaPreventivo
 
-    def generar_descripcion_evento(self):
-        return f"Mantenimiento preventivo periódico de {self.tipo_equipo}"
+    def crear_evento_especifico(self):
+        evento = EventoPreventivo(
+            fecha=datetime.date.today(),
+            descripcion=f"Mantenimiento preventivo periódico de {self.tipo_equipo}",
+            programa=self
+        )
 
-    def acciones_especificas_al_finalizar(self):
         self.fecha_ultima_ejecucion = datetime.date.today()
         self.programar_siguiente()
+
+        return evento    
+
 
 
     

@@ -1,6 +1,9 @@
 from Maquinaria import Maquinaria
 from PersonalEspecializado import PersonalEspecializado
 from ComponenteRecambio import ComponenteRecambio
+from EventoFalla import EventoFalla
+from EventoCorrectivo import EventoCorrectivo
+from EventoPreventivo import EventoPreventivo
 
 class SIMPIA:
     def __init__(self):
@@ -34,6 +37,22 @@ class SIMPIA:
 
         self.componentes.append(componente)
 
+    def registrar_evento(self, maquinaria, fecha, descripcion, **contexto):
+        claves = set(contexto.keys())
+
+        if claves == {"causa", "dispositivo_origen"}:
+            evento = EventoFalla(fecha, descripcion, **contexto)
+        elif claves == {"personal", "componentes_utilizados", "aviso_resuelto"}:
+            evento = EventoCorrectivo(fecha, descripcion, **contexto)
+        elif claves == {"programa"}:
+            evento = EventoPreventivo(fecha, descripcion, **contexto)
+        else:
+            raise ValueError(f"No se reconoce el tipo de evento con estos datos: {claves}")
+
+        maquinaria.historial.append(evento)
+        return evento
+    
+    
     def listar_avisos(self):
         return [aviso for maquinaria in self.maquinas for aviso in maquinaria.avisos]
 
