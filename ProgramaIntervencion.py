@@ -1,8 +1,5 @@
 from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
-from Evento import Evento
 from Maquinaria import Maquinaria
-import datetime
-#probando
 
 class ProgramaIntervencion:
     es_correctivo = False
@@ -62,10 +59,9 @@ class ProgramaIntervencion:
         self.personal_asignado.append(tecnico)
 
     def finalizar(self):
+        # Solo se finaliza desde EN_EJECUCION; esto también rechaza un programa ya COMPLETADO
         if self.estado != EstadoProgramaIntervencion.EN_EJECUCION:
-            raise ValueError("Solo se puede finalizar un programa que está en ejecución")        
-        if self.estado == EstadoProgramaIntervencion.COMPLETADO:
-            raise ValueError("El programa ya fue completado anteriormente")
+            raise ValueError("Solo se puede finalizar un programa que está en ejecución")
 
         self.estado = EstadoProgramaIntervencion.COMPLETADO
 

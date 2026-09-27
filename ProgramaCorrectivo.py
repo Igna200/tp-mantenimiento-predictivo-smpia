@@ -2,20 +2,48 @@ from Aviso import Aviso
 from ProgramaIntervencion import ProgramaIntervencion
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoMaquinaria import EstadoMaquinaria
+from estados.Especialidad import Especialidad
 import datetime
+import unicodedata
 from EventoCorrectivo import EventoCorrectivo
 
 class ProgramaCorrectivo(ProgramaIntervencion):
     es_correctivo = True
 
-    def __init__(self,maquinaria, procedimiento, componentes_requeridos, tiempo_requerido,especialidad_requerida, aviso_asociado: Aviso, tipo_equipo: str):
+    # Regla 7: la especialidad requerida depende de la naturaleza de la anomalía
+    ESPECIALIDAD_POR_VARIABLE = {
+        "presion": Especialidad.hidraulico,
+        "caudal": Especialidad.hidraulico,
+        "vibracion": Especialidad.mecanico,
+        "temperatura": Especialidad.mecanico,
+        "consumo energetico": Especialidad.electronico,
+        "voltaje": Especialidad.electronico,
+        "corriente": Especialidad.electronico,
+    }
+
+    def __init__(self, maquinaria, procedimiento, componentes_requeridos, tiempo_requerido,
+                 aviso_asociado: Aviso, tipo_equipo: str, especialidad_requerida=None):
         if aviso_asociado.estado != EstadoAviso.ACTIVO:
             raise ValueError("Un programa correctivo debe estar asociado a un aviso activo")
+
+        if especialidad_requerida is None:
+            especialidad_requerida = self.especialidad_para_variable(aviso_asociado.parametro_anomalo)
 
         super().__init__(maquinaria,procedimiento, componentes_requeridos,tiempo_requerido, especialidad_requerida)
         self.aviso_asociado = aviso_asociado
         self.tipo_equipo = tipo_equipo
-    # En ProgramaCorrectivo
+
+    @classmethod
+    def especialidad_para_variable(cls, variable: str):
+        # Normaliza "Presión " -> "presion" para que no importen mayúsculas, espacios ni tildes
+        sin_tildes = unicodedata.normalize("NFD", str(variable)).encode("ascii", "ignore").decode()
+        clave = sin_tildes.strip().lower()
+        if clave not in cls.ESPECIALIDAD_POR_VARIABLE:
+            raise ValueError(
+                f"No se puede deducir la especialidad para la variable '{variable}'; "
+                f"indíquela explícitamente"
+            )
+        return cls.ESPECIALIDAD_POR_VARIABLE[clave]
 
 
 
@@ -40,15 +68,3 @@ class ProgramaCorrectivo(ProgramaIntervencion):
             pass  # sigue habiendo avisos críticos u otros correctivos pendientes: se queda como está
 
         return evento
-
-
-    def generar_descripcion_evento(self):
-        return f"Corrección de {self.tipo_equipo}: {self.aviso_asociado.parametro_anomalo}"
-
-    def acciones_especificas_al_finalizar(self):
-        self.aviso_asociado.cerrar_aviso()
-        try:
-            self.maquinaria.set_estado_maquinaria(EstadoMaquinaria.PLENAMENTE_OPERATIVA)
-        except Exception:
-            pass  # sigue habiendo avisos críticos u otros correctivos pendientes: se queda como está
-        

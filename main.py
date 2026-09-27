@@ -82,12 +82,12 @@ def main():
         if not sistema.maquinas:
             print("No hay maquinaria registrada.")
             return
-        for m in sistema.maquinas:
+        for m in sistema.maquinas.values():
             print(f"ID: {m.id_unico} | Estado: {m.estado.value}")
 
 
     def buscar_maquinaria(id_unico):
-        return next((m for m in sistema.maquinas if m.id_unico == id_unico), None)
+        return sistema.buscar_maquinaria(id_unico)
 
 
     def cambiar_estado_maquinaria():
@@ -123,14 +123,18 @@ def main():
             descripcion_falla = input("Descripción de la falla: ")
 
             print("Personal disponible:")
-            for i, tecnico in enumerate(sistema.personal, start=1):
-                print(f"{i}. {tecnico.nombre} {tecnico.apellido}")
+            for id_tecnico, tecnico in sistema.personal.items():
+                print(f"{id_tecnico}. {tecnico.nombre} {tecnico.apellido}")
             try:
-                indice = int(input("Seleccione el técnico que detectó la falla: ")) - 1
-                personal_interviniente = [sistema.personal[indice]]
-            except (ValueError, IndexError):
+                id_tecnico = int(input("Ingrese el ID del técnico que detectó la falla: "))
+            except ValueError:
+                print("Error: el ID debe ser numérico.")
+                return
+            tecnico = sistema.buscar_personal(id_tecnico)
+            if tecnico is None:
                 print("Error: selección inválida.")
                 return
+            personal_interviniente = [tecnico]
 
         try:
             maquinaria.set_estado_maquinaria(nuevo_estado, descripcion_falla, personal_interviniente)
