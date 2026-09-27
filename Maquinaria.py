@@ -6,9 +6,12 @@ from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
 from EventoFalla import EventoFalla
 
 class Maquinaria:
-    def __init__(self, id_unico, fecha_ultimo_mantenimiento: datetime.date = None, historial=None, estado=EstadoMaquinaria.PLENAMENTE_OPERATIVA):
+    def __init__(self, id_unico, fecha_ultimo_mantenimiento: datetime.date = None, historial=None):
+        # Regla 1: el ID no puede faltar
+        if id_unico is None or str(id_unico).strip() == "":
+            raise ValueError("La maquinaria debe tener un ID único")
         self.id_unico=id_unico
-        self.estado=estado
+        self.estado=EstadoMaquinaria.PLENAMENTE_OPERATIVA  # Regla 1: al registrarse, siempre operativa
         self.fecha_ultimo_mantenimiento=fecha_ultimo_mantenimiento
         self.historial=historial if historial is not None else []
         self.avisos=[]

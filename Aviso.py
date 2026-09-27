@@ -23,6 +23,7 @@ class Aviso:
         self.estado=estado
         self.fecha_creacion=fecha_creacion if fecha_creacion is not None else datetime.date.today()
         self.fecha_cierre=fecha_cierre
+        self.resuelto_por=None
         self.equipo_afectado.agregar_aviso(self)
 
     def cerrar_aviso(self):
@@ -30,6 +31,13 @@ class Aviso:
             raise ValueError("El aviso ya está resuelto")
         self.estado = EstadoAviso.RESUELTO
         self.fecha_cierre = datetime.date.today()
+
+    def desactivar(self, personal):
+        # Regla 4: resolución manual por parte del personal capacitado
+        if not isinstance(personal, PersonalEspecializado):
+            raise TypeError("Solo el personal especializado puede desactivar un aviso")
+        self.cerrar_aviso()
+        self.resuelto_por = personal
 
     def __repr__(self):
         return (f"Aviso(id={self.id_aviso}, severidad={self.severidad.value}, "
