@@ -113,31 +113,26 @@ def main():
             return
 
         descripcion_falla = None
-        personal_interviniente = None
+        causa = None
+        dispositivo_origen = None
 
         if nuevo_estado == EstadoMaquinaria.FALLA_DECLARADA:
-            if not sistema.personal:
-                print("Error: no hay personal especializado registrado para asociar a la falla.")
-                return
-
             descripcion_falla = input("Descripción de la falla: ")
+            causa = input("Causa de la falla: ")
 
-            print("Personal disponible:")
-            for id_tecnico, tecnico in sistema.personal.items():
-                print(f"{id_tecnico}. {tecnico.nombre} {tecnico.apellido}")
-            try:
-                id_tecnico = int(input("Ingrese el ID del técnico que detectó la falla: "))
-            except ValueError:
-                print("Error: el ID debe ser numérico.")
-                return
-            tecnico = sistema.buscar_personal(id_tecnico)
-            if tecnico is None:
-                print("Error: selección inválida.")
-                return
-            personal_interviniente = [tecnico]
+            if maquinaria.dispositivos:
+                print("Dispositivo que originó la falla (opcional):")
+                for i, d in enumerate(maquinaria.dispositivos, start=1):
+                    print(f"{i}. {d.tipo_de_variable} (umbral: {d.umbral_limite})")
+                respuesta = input("Número de dispositivo, o Enter para omitir: ").strip()
+                if respuesta:
+                    try:
+                        dispositivo_origen = maquinaria.dispositivos[int(respuesta) - 1]
+                    except (ValueError, IndexError):
+                        print("Selección inválida, se omite el dispositivo de origen.")
 
         try:
-            maquinaria.set_estado_maquinaria(nuevo_estado, descripcion_falla, personal_interviniente)
+            maquinaria.set_estado_maquinaria(nuevo_estado, descripcion_falla, causa, dispositivo_origen)
         except ValueError as e:
             print(f"Error: {e}")
             return

@@ -47,6 +47,8 @@ class ProgramaIntervencion:
             self.chequear_stock()
             for componente, cantidad_necesaria in self.componentes_requeridos.items():
                 componente.descontar_stock(cantidad_necesaria)
+            for tecnico in self.personal_asignado:
+                tecnico.ocupar()
 
         self.estado = estado
 
@@ -56,6 +58,8 @@ class ProgramaIntervencion:
                 f"Especialidad incompatible: se requiere {self.especialidad_requerida}, "
                 f"el técnico tiene {tecnico.especialidad}"
             )
+        if not tecnico.disponibilidad:
+            raise ValueError(f"{tecnico.nombre} ya está ocupado en otra intervención")
         self.personal_asignado.append(tecnico)
 
     def finalizar(self):
@@ -65,6 +69,9 @@ class ProgramaIntervencion:
 
         self.estado = EstadoProgramaIntervencion.COMPLETADO
 
+        for tecnico in self.personal_asignado:
+            tecnico.liberar()
+
         evento = self.crear_evento_especifico()
         self.maquinaria.historial.append(evento)
 
@@ -72,3 +79,7 @@ class ProgramaIntervencion:
     
     def crear_evento_especifico(self):
         raise NotImplementedError("Las clases hijas deben implementar crear_evento_especifico")
+
+    def __repr__(self):
+        tipo = "Correctivo" if self.es_correctivo else "Preventivo"
+        return f"Programa{tipo}(maquinaria={self.maquinaria.id_unico}, estado={self.estado.value})"
