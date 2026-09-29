@@ -1,4 +1,4 @@
-class nodo:
+class Nodo:
     def __init__(self, dato):
         self.dato=dato
         self.siguiente=None
@@ -37,6 +37,51 @@ class ListaEnlazada:
             pos_actual+=1
             actual=actual.siguiente
         return actual.dato
+
+    def insertar_inicio (self, dato):
+        nuevo_nodo=Nodo(dato)
+        nuevo_nodo.siguiente=self.cabeza
+        self.cabeza=nuevo_nodo
+
+    def insertar_final (self, dato):
+        nuevo_nodo=Nodo(dato)
+        actual=self.cabeza
+        if actual is None:
+            self.insertar_inicio(dato)
+            return
+        while actual.siguiente is not None:
+            actual=actual.siguiente
+        actual.siguiente=nuevo_nodo
+
+    def eliminar_primero (self):
+        if self.cabeza is None:
+            raise IndexError ("La lista seleccionada está vacía")
+        self.cabeza=self.cabeza.siguiente
+
+    def eliminar_ultimo(self):
+        actual=self.cabeza
+        if actual is None:
+            raise IndexError("Lista vacía")
+        if actual.siguiente is None:
+            self.eliminar_primero()
+            return
+        while actual.siguiente.siguiente is not None:
+            actual=actual.siguiente
+        actual.siguiente=None
+
+    def buscar_posicion(self, valor):
+        if self.cabeza is None:
+            raise IndexError ("Lista vacía")
+        actual=self.cabeza
+        posicion=0
+        while actual.dato != valor:
+            if actual.siguiente is None:
+                raise ValueError ("No se encontró el valor pedido")
+            actual=actual.siguiente
+            posicion+=1
+        return f"Posicion del valor: {posicion}"
+        
+
 
 
     #Falta insertar nodos, eliminar nodos, etc
