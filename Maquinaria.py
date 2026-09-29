@@ -41,8 +41,10 @@ class Maquinaria:
     def agregar_dispositivo(self, dispositivo):
         self.dispositivos.append(dispositivo)
 
-    def set_estado_maquinaria(self, nuevo_estado: EstadoMaquinaria, descripcion_falla: str = None,
-                            causa: str = None, dispositivo_origen=None):
+    def set_estado_maquinaria(self, nuevo_estado: EstadoMaquinaria, **datos_falla):
+        # **datos_falla (kwargs): datos opcionales que solo hacen falta al declarar una falla
+        # (descripcion_falla, causa, dispositivo_origen). Para otros estados no se pasa nada,
+        # así el mismo método sirve para todos los cambios de estado sin parámetros "de relleno".
         if nuevo_estado not in EstadoMaquinaria:
             raise ValueError("El nuevo estado no es válido")
 
@@ -51,17 +53,18 @@ class Maquinaria:
                 raise ValueError("Hay un aviso pendiente sin resolver")
 
         if nuevo_estado == EstadoMaquinaria.FALLA_DECLARADA:
-            if not descripcion_falla:
+            # datos_falla es un diccionario: devuelve None si la clave no vino
+            if not datos_falla.get("descripcion_falla"):
                 raise ValueError("Debe indicar una descripción de la falla")
-            if not causa:
+            if not datos_falla.get("causa"):
                 raise ValueError("Debe indicar la causa de la falla")
 
-            evento = EventoFalla(
-                fecha=datetime.date.today(),
-                descripcion=descripcion_falla,
-                causa=causa,
-                dispositivo_origen=dispositivo_origen
-            )
+            # Regla 8: toda falla queda registrada en el historial.
+            # Se desempaqueta el diccionario con ** para pasarle a EventoFalla sus datos
+            # (causa, dispositivo_origen); la descripción se saca aparte porque en Evento se llama "descripcion".
+            descripcion = datos_falla.pop("descripcion_falla")
+            datos_falla.setdefault("dispositivo_origen", None)  # el dispositivo es opcional
+            evento = EventoFalla(fecha=datetime.date.today(), descripcion=descripcion, **datos_falla)
             self.historial.append(evento)
 
         self.estado = nuevo_estado
