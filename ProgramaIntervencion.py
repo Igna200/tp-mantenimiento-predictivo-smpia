@@ -35,6 +35,9 @@ class ProgramaIntervencion:
         if not isinstance(estado, EstadoProgramaIntervencion):
             raise TypeError("El estado debe ser una instancia de EstadoProgramaIntervencion")
         if estado == EstadoProgramaIntervencion.EN_EJECUCION:
+            # Primero se hacen TODAS las validaciones y recién después se modifica algo
+            # (stock y disponibilidad), así el programa nunca queda ejecutado a medias.
+
             # Regla 7: el personal también tiene que ser compatible para EJECUTAR
             if not self.personal_asignado:
                 raise ValueError("No hay personal asignado para ejecutar el programa")
@@ -44,7 +47,13 @@ class ProgramaIntervencion:
                         f"Personal incompatible: {tecnico.nombre} no tiene la especialidad "
                         f"{self.especialidad_requerida.value}"
                     )
+                # Un técnico puede estar asignado a varios programas, pero solo ejecutar
+                # uno a la vez: si ya está ocupado en otro, no se arranca.
+                if not tecnico.disponibilidad:
+                    raise ValueError(f"{tecnico.nombre} ya está ocupado en otra intervención")
             self.chequear_stock()
+
+            # A partir de acá ya se validó todo: se descuenta stock y se ocupa al personal
             for componente, cantidad_necesaria in self.componentes_requeridos.items():
                 componente.descontar_stock(cantidad_necesaria)
             for tecnico in self.personal_asignado:

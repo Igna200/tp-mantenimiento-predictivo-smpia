@@ -68,8 +68,9 @@ def main():
     def registrar_maquinaria():
         id_unico = input("ID único de la maquinaria: ")
 
-        nueva = Maquinaria(id_unico)
+
         try:
+            nueva = Maquinaria(id_unico)           #si el id es vacio salta el error.
             sistema.registrar_maquinaria(nueva)
         except ValueError as e:
             print(f"Error: {e}")
@@ -112,13 +113,13 @@ def main():
             print("Opción inválida.")
             return
 
-        descripcion_falla = None
-        causa = None
-        dispositivo_origen = None
+        # Diccionario con los datos extra del cambio de estado; solo se llena si es una falla.
+        # Después se pasa con ** a set_estado_maquinaria, que lo recibe como kwargs.
+        datos_falla = {}
 
         if nuevo_estado == EstadoMaquinaria.FALLA_DECLARADA:
-            descripcion_falla = input("Descripción de la falla: ")
-            causa = input("Causa de la falla: ")
+            datos_falla["descripcion_falla"] = input("Descripción de la falla: ")
+            datos_falla["causa"] = input("Causa de la falla: ")
 
             if maquinaria.dispositivos:
                 print("Dispositivo que originó la falla (opcional):")
@@ -127,12 +128,12 @@ def main():
                 respuesta = input("Número de dispositivo, o Enter para omitir: ").strip()
                 if respuesta:
                     try:
-                        dispositivo_origen = maquinaria.dispositivos[int(respuesta) - 1]
+                        datos_falla["dispositivo_origen"] = maquinaria.dispositivos[int(respuesta) - 1]
                     except (ValueError, IndexError):
                         print("Selección inválida, se omite el dispositivo de origen.")
 
         try:
-            maquinaria.set_estado_maquinaria(nuevo_estado, descripcion_falla, causa, dispositivo_origen)
+            maquinaria.set_estado_maquinaria(nuevo_estado, **datos_falla)
         except ValueError as e:
             print(f"Error: {e}")
             return
