@@ -1,6 +1,7 @@
 import datetime
 import calendar
 from estados.Especialidad import Especialidad
+from cola import ColaProgramasTrabajo
 class PersonalEspecializado:
     def __init__(self, id:int, nombre:str,apellido: str, especialidad:Especialidad, fecha_nacimiento: datetime.date, disponibilidad:bool = True, fecha_ingreso: datetime.date = None):
         self.nombre=nombre
@@ -72,3 +73,14 @@ class PersonalEspecializado:
             disponibilidad=datos["disponibilidad"],
             fecha_ingreso=datetime.date.fromisoformat(datos["fecha_ingreso"]),
         )
+
+    def set_asignar_programa_a_cola(self, programa):
+        """Encola el programa de trabajo en la Cola FIFO del técnico."""
+        # Se asume que la verificación de especialidad/compatibilidad ya fue realizada previamente
+        self.cola_trabajos_pendientes.set_encolar_programa(programa)
+
+    def get_ejecutar_siguiente_trabajo(self):
+        """Atiende y ejecuta el primer programa que ingresó a su cola."""
+        programa = self.cola_trabajos_pendientes.get_desencolar_programa()
+        programa.finalizar()  # Ejecuta / finaliza la intervención
+        return programa
