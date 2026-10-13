@@ -68,3 +68,35 @@ class Maquinaria:
             self.historial.append(evento)
 
         self.estado = nuevo_estado
+
+    def to_dict(self):
+        # dispositivos, avisos, programas e historial van anidados acá porque son
+        # propiedad de la maquinaria (composición): no existen por separado.
+        return {
+            "id_unico": self.id_unico,
+            "estado": self.estado.value,
+            "fecha_ultimo_mantenimiento": (
+                self.fecha_ultimo_mantenimiento.isoformat() if self.fecha_ultimo_mantenimiento else None
+            ),
+            "dispositivos": [d.to_dict() for d in self.dispositivos],
+            "avisos": [a.to_dict() for a in self.avisos],
+            "programas": [p.to_dict() for p in self.programas],
+            "historial": [e.to_dict() for e in self.historial],
+        }
+
+    @classmethod
+    def from_dict(cls, datos):
+        # Solo arma la maquinaria "pelada". Lo que le pertenece (dispositivos, avisos,
+        # programas, historial) lo reconstruye SIMPIA.cargar(), porque necesita ir
+        # resolviendo referencias cruzadas entre maquinarias, personal y componentes.
+        fecha = datos.get("fecha_ultimo_mantenimiento")
+        maquinaria = cls(
+            datos["id_unico"],
+            datetime.date.fromisoformat(fecha) if fecha else None,
+        )
+        # El constructor siempre deja la maquinaria Plenamente Operativa (Regla 1: así
+        # arranca una maquinaria RECIÉN registrada). Acá no estamos registrando una
+        # nueva, sino restaurando un estado que ya existía y ya fue validado antes de
+        # guardarse, así que lo pisamos directo en vez de pasar por set_estado_maquinaria.
+        maquinaria.estado = EstadoMaquinaria(datos["estado"])
+        return maquinaria

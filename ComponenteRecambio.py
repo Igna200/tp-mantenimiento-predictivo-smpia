@@ -17,4 +17,22 @@ class ComponenteRecambio:
     def setter_agregar_stock(self, cantidad_a_sumar:int):
         if cantidad_a_sumar <= 0:
             raise ValueError("La cantidad a agregar debe ser mayor a cero.")
-        self.cantidad += cantidad_a_sumar  
+        self.cantidad += cantidad_a_sumar
+
+    def to_dict(self):
+        return {"id": self.id, "nombre": self.nombre, "cantidad": self.cantidad}
+
+    @classmethod
+    def from_dict(cls, datos):
+        return cls(datos["id"], datos["nombre"], datos["cantidad"])
+
+    @staticmethod
+    def serializar_requeridos(componentes_requeridos):
+        # {ComponenteRecambio: cantidad} -> [{"componente_id": id, "cantidad": n}, ...]
+        # En JSON las claves de un objeto tienen que ser strings; un ComponenteRecambio
+        # no sirve como clave, por eso se guarda como una lista de pares.
+        return [{"componente_id": c.id, "cantidad": n} for c, n in componentes_requeridos.items()]
+
+    @staticmethod
+    def deserializar_requeridos(lista, componentes_por_id):
+        return {componentes_por_id[item["componente_id"]]: item["cantidad"] for item in lista}

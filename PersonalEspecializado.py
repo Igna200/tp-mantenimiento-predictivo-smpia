@@ -48,3 +48,27 @@ class PersonalEspecializado:
         dias = (fecha_hasta - self._sumar_meses(self.fecha_ingreso, meses)).days
 
         return meses // 12, meses % 12, dias
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nombre": self.nombre,
+            "apellido": self.apellido,
+            "especialidad": self.especialidad.value,
+            "fecha_nacimiento": self.fecha_nacimiento.isoformat(),
+            "disponibilidad": self.disponibilidad,
+            "fecha_ingreso": self.fecha_ingreso.isoformat(),
+        }
+
+    @classmethod
+    def from_dict(cls, datos):
+        # El constructor normal no tiene ninguna regla de negocio que pueda rechazar
+        # un estado ya guardado (disponibilidad y fecha_ingreso se aceptan tal cual),
+        # así que alcanza con llamarlo directo.
+        return cls(
+            datos["id"], datos["nombre"], datos["apellido"],
+            Especialidad(datos["especialidad"]),
+            datetime.date.fromisoformat(datos["fecha_nacimiento"]),
+            disponibilidad=datos["disponibilidad"],
+            fecha_ingreso=datetime.date.fromisoformat(datos["fecha_ingreso"]),
+        )

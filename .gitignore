@@ -1,3 +1,6 @@
+# Datos persistidos de SIMPIA (estado de cada corrida local, no se versiona)
+datos_smpia.json
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[codz]

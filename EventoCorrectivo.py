@@ -1,4 +1,5 @@
 from Evento import Evento
+from ComponenteRecambio import ComponenteRecambio
 import datetime
 
 class EventoCorrectivo(Evento):
@@ -18,3 +19,24 @@ class EventoCorrectivo(Evento):
         nombres_componentes = ", ".join(f"{c.nombre} x{n}" for c, n in self.componentes_utilizados.items()) or "ninguno"
         return (f"{super().__str__()} | Personal: {nombres_personal} | "
                 f"Componentes: {nombres_componentes}")
+
+    def to_dict(self):
+        datos = super().to_dict()
+        datos["tipo_evento"] = "correctivo"
+        datos["personal_ids"] = [p.id for p in self.personal]
+        datos["componentes_utilizados"] = ComponenteRecambio.serializar_requeridos(self.componentes_utilizados)
+        # El aviso tiene id propio (global, no por maquinaria): lo usamos para referenciarlo
+        datos["aviso_resuelto_id"] = self.aviso_resuelto.id_aviso
+        return datos
+
+    @classmethod
+    def from_dict(cls, datos, personal_por_id, componentes_por_id, aviso_resuelto):
+        return cls(
+            fecha=datetime.date.fromisoformat(datos["fecha"]),
+            descripcion=datos["descripcion"],
+            personal=[personal_por_id[pid] for pid in datos["personal_ids"]],
+            componentes_utilizados=ComponenteRecambio.deserializar_requeridos(
+                datos["componentes_utilizados"], componentes_por_id
+            ),
+            aviso_resuelto=aviso_resuelto,
+        )

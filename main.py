@@ -1,5 +1,6 @@
 def main():
     import datetime
+    import json
     from Maquinaria import Maquinaria
     from DispositivoMedicion import DispositivoMedicion
     from PersonalEspecializado import PersonalEspecializado
@@ -12,8 +13,20 @@ def main():
     from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
     from estados.Especialidad import Especialidad
 
-# "Base de datos" en memoria
-    sistema = SIMPIA()
+# "Base de datos" en memoria: si existe un archivo guardado de una corrida anterior, lo carga
+    ARCHIVO_DATOS = "datos_smpia.json"
+    try:
+        sistema = SIMPIA.cargar(ARCHIVO_DATOS)
+        print(f"Datos cargados desde {ARCHIVO_DATOS} "
+              f"({len(sistema.maquinas)} maquinaria(s), {len(sistema.personal)} técnico(s), "
+              f"{len(sistema.componentes)} componente(s)).")
+    except FileNotFoundError:
+        sistema = SIMPIA()
+        print("No se encontró un archivo de datos previo; se arranca con el sistema vacío.")
+    except (json.JSONDecodeError, KeyError) as e:
+        # Archivo corrupto o incompleto: no se aborta el programa, se arranca vacío
+        sistema = SIMPIA()
+        print(f"No se pudo leer {ARCHIVO_DATOS} ({e}); se arranca con el sistema vacío.")
 
 
     def menu_principal():
@@ -29,6 +42,7 @@ def main():
             "6": menu_avisos,
             "7": ver_historial,
             "8": cargar_datos_ejemplo,
+            "9": guardar_datos,
         }
 
         while True:
@@ -41,11 +55,13 @@ def main():
             print("6. Gestionar Avisos")
             print("7. Ver Historial de Eventos")
             print("8. Cargar datos de ejemplo (para probar o hacer la demo)")
-            print("0. Salir")
+            print("9. Guardar datos ahora")
+            print("0. Guardar y salir")
 
             opcion = input("Seleccione una opción: ")
 
             if opcion == "0":
+                guardar_datos()
                 print("Saliendo del sistema...")
                 break
 
@@ -821,6 +837,13 @@ def main():
         print("  Componentes:  1 Junta hidráulica (10), 2 Rodamiento (6), 3 Fusible (20)")
         print("  Dispositivos: 1 presión (umbral 100) en PRENSA-01, 2 temperatura (umbral 80) en HORNO-02")
         print("  Sugerencia: registrá una lectura de 150 en el dispositivo de presión de PRENSA-01.")
+
+
+    # ---------- 9. Persistencia ----------
+
+    def guardar_datos():
+        sistema.guardar(ARCHIVO_DATOS)
+        print(f"Datos guardados en {ARCHIVO_DATOS}.")
 
 
     menu_principal()

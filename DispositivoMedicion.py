@@ -46,3 +46,11 @@ class DispositivoMedicion:
                 return None
 
         return None
+
+    def to_dict(self):
+        return {"id": self.id, "tipo_de_variable": self.tipo_de_variable, "umbral_limite": self.umbral_limite}
+
+    @classmethod
+    def from_dict(cls, datos, maquinaria):
+        # Sin regla de negocio que pueda rechazar un estado ya guardado: constructor normal.
+        return cls(datos["id"], maquinaria, datos["tipo_de_variable"], datos["umbral_limite"])
