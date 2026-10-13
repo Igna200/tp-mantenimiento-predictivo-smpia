@@ -35,6 +35,13 @@ class ProgramaIntervencion:
         if not isinstance(estado, EstadoProgramaIntervencion):
             raise TypeError("El estado debe ser una instancia de EstadoProgramaIntervencion")
         if estado == EstadoProgramaIntervencion.EN_EJECUCION:
+            # Solo se inicia un programa que está PROGRAMADO: si ya está en ejecución o completado,
+            # volver a iniciarlo descontaría el stock otra vez
+            if self.estado != EstadoProgramaIntervencion.PROGRAMADO:
+                raise ValueError(
+                    f"Solo se puede iniciar un programa programado (estado actual: {self.estado.value})"
+                )
+
             # Primero se hacen TODAS las validaciones y recién después se modifica algo
             # (stock y disponibilidad), así el programa nunca queda ejecutado a medias.
 
@@ -64,8 +71,8 @@ class ProgramaIntervencion:
     def asignar_personal(self, tecnico):
         if tecnico.especialidad != self.especialidad_requerida:
             raise ValueError(
-                f"Especialidad incompatible: se requiere {self.especialidad_requerida}, "
-                f"el técnico tiene {tecnico.especialidad}"
+                f"Especialidad incompatible: se requiere {self.especialidad_requerida.value}, "
+                f"el técnico tiene {tecnico.especialidad.value}"
             )
         if not tecnico.disponibilidad:
             raise ValueError(f"{tecnico.nombre} ya está ocupado en otra intervención")

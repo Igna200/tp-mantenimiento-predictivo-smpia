@@ -1,6 +1,8 @@
 from Maquinaria import Maquinaria
 from PersonalEspecializado import PersonalEspecializado
 from ComponenteRecambio import ComponenteRecambio
+from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
+import datetime
 
 class SIMPIA:
     def __init__(self):
@@ -34,6 +36,35 @@ class SIMPIA:
             raise ValueError(f"Ya existe un componente registrado con el ID {componente.id}")
 
         self.componentes[componente.id] = componente
+
+    def dar_de_baja_personal(self, id, fecha_egreso: datetime.date = None):
+        # Baja de un técnico que deja la empresa (despido o renuncia).
+        # Devuelve el técnico, el tiempo que estuvo (años, meses, días) y los programas de los que se lo quitó.
+        tecnico = self.personal.get(id)
+        if tecnico is None:
+            # También cubre intentar dar de baja dos veces al mismo técnico
+            raise ValueError(f"No existe personal registrado con el ID {id}")
+        if not tecnico.disponibilidad:
+            raise ValueError(
+                f"{tecnico.nombre} {tecnico.apellido} está ejecutando una intervención; "
+                f"la baja se puede registrar cuando finalice"
+            )
+
+        fecha_egreso = fecha_egreso if fecha_egreso is not None else datetime.date.today()
+        periodo = tecnico.tiempo_en_empresa(fecha_egreso)
+
+        # Si estaba asignado a programas que todavía no empezaron, se lo quita para que
+        # nadie que ya no pertenece a la empresa pueda ejecutarlos. Los completados no se tocan:
+        # su historial tiene que seguir mostrando quién intervino.
+        programas_afectados = []
+        for maquinaria in self.maquinas.values():
+            for programa in maquinaria.programas:
+                if programa.estado == EstadoProgramaIntervencion.PROGRAMADO and tecnico in programa.personal_asignado:
+                    programa.personal_asignado.remove(tecnico)
+                    programas_afectados.append(programa)
+
+        del self.personal[id]
+        return tecnico, periodo, programas_afectados
 
     def buscar_maquinaria(self, id_unico):
         return self.maquinas.get(id_unico)

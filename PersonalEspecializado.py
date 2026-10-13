@@ -1,13 +1,19 @@
 import datetime
+import calendar
 from estados.Especialidad import Especialidad
 class PersonalEspecializado:
-    def __init__(self, id:int, nombre:str,apellido: str, especialidad:Especialidad, fecha_nacimiento: datetime.date, disponibilidad:bool = True):
+    def __init__(self, id:int, nombre:str,apellido: str, especialidad:Especialidad, fecha_nacimiento: datetime.date, disponibilidad:bool = True, fecha_ingreso: datetime.date = None):
         self.nombre=nombre
         self.apellido=apellido
         self.especialidad=especialidad
         self.id=id
         self.fecha_nacimiento= fecha_nacimiento
         self.disponibilidad=disponibilidad
+        # Fecha en que entró a la empresa; si no se indica, se toma hoy.
+        # Se usa para calcular cuánto tiempo estuvo cuando se lo da de baja.
+        self.fecha_ingreso = fecha_ingreso if fecha_ingreso is not None else datetime.date.today()
+        if self.fecha_ingreso > datetime.date.today():
+            raise ValueError("La fecha de ingreso no puede ser futura")
 
     def ocupar(self):
 
@@ -18,3 +24,27 @@ class PersonalEspecializado:
     def liberar(self):
 
         self.disponibilidad = True
+
+    @staticmethod
+    def _sumar_meses(fecha: datetime.date, meses: int):
+        # Suma meses a una fecha. Si el día no existe en el mes de destino (ej. 31 de febrero),
+        # se usa el último día de ese mes. calendar.monthrange devuelve cuántos días tiene el mes.
+        anio = fecha.year + (fecha.month - 1 + meses) // 12
+        mes = (fecha.month - 1 + meses) % 12 + 1
+        dia = min(fecha.day, calendar.monthrange(anio, mes)[1])
+        return datetime.date(anio, mes, dia)
+
+    def tiempo_en_empresa(self, fecha_hasta: datetime.date = None):
+        # Devuelve (años, meses, días) desde la fecha de ingreso hasta fecha_hasta (por defecto, hoy).
+        # Primero cuenta los meses completos y después los días que sobran.
+        fecha_hasta = fecha_hasta if fecha_hasta is not None else datetime.date.today()
+        if fecha_hasta < self.fecha_ingreso:
+            raise ValueError("La fecha de egreso no puede ser anterior a la de ingreso")
+
+        meses = (fecha_hasta.year - self.fecha_ingreso.year) * 12 + (fecha_hasta.month - self.fecha_ingreso.month)
+        # Si todavía no se llegó al día del mes en que ingresó, el último mes no está completo
+        if self._sumar_meses(self.fecha_ingreso, meses) > fecha_hasta:
+            meses -= 1
+        dias = (fecha_hasta - self._sumar_meses(self.fecha_ingreso, meses)).days
+
+        return meses // 12, meses % 12, dias
