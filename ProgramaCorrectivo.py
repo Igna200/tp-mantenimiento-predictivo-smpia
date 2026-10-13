@@ -57,7 +57,8 @@ class ProgramaCorrectivo(ProgramaIntervencion):
             fecha=datetime.date.today(),
             descripcion=f"Corrección de {self.tipo_equipo}: {self.aviso_asociado.parametro_anomalo}",
             personal=list(self.personal_asignado),
-            componentes_utilizados=list(self.componentes_requeridos.keys()),
+            # Copia del diccionario componente -> cantidad: el evento guarda qué y cuánto se usó
+            componentes_utilizados=dict(self.componentes_requeridos),
             aviso_resuelto=self.aviso_asociado
         )
 

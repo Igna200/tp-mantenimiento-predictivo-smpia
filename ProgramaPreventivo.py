@@ -25,16 +25,16 @@ class ProgramaPreventivo(ProgramaIntervencion):
     # En ProgramaPreventivo
 
     def crear_evento_especifico(self):
-        evento = EventoPreventivo(
+        # Primero se reprograma y después se crea el evento, así el evento ya conoce
+        # la fecha de la próxima ejecución
+        self.fecha_ultima_ejecucion = datetime.date.today()
+        self.programar_siguiente()
+
+        return EventoPreventivo(
             fecha=datetime.date.today(),
             descripcion=f"Mantenimiento preventivo periódico de {self.tipo_equipo}",
             programa=self
         )
-
-        self.fecha_ultima_ejecucion = datetime.date.today()
-        self.programar_siguiente()
-
-        return evento    
 
 
 

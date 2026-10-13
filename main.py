@@ -57,230 +57,139 @@ def main():
                 accion()
 
 
-    def menu_maquinaria():
-        print("\n--- Gestión de Maquinaria ---")
-        print("1. Registrar nueva maquinaria")
-        print("2. Listar maquinaria")
-        print("3. Cambiar estado de maquinaria")
-        print("0. Volver")
+    def ejecutar_submenu(titulo, opciones):
+        # Submenú genérico: opciones es un diccionario número -> (texto, función).
+        # Se queda abierto hasta elegir 0, igual que el menú principal; si la opción no existe,
+        # avisa y la vuelve a pedir en vez de volver al menú principal.
+        while True:
+            print(f"\n--- {titulo} ---")
+            for numero, (texto, _) in opciones.items():
+                print(f"{numero}. {texto}")
+            print("0. Volver")
+            print("(En cualquier dato, Enter sin escribir nada cancela y vuelve a este menú)")
 
-        opcion = input("Seleccione una opción: ")
+            opcion = input("Seleccione una opción: ")
+            if opcion == "0":
+                return
+            entrada = opciones.get(opcion)
+            if entrada is None:
+                print("Opción inválida.")
+            else:
+                entrada[1]()
 
-        if opcion == "1":
-            registrar_maquinaria()
-        elif opcion == "2":
-            listar_maquinaria()
-        elif opcion == "3":
-            cambiar_estado_maquinaria()
-        elif opcion != "0":
-            # Antes volvía al menú principal sin avisar si la opción no existía
+
+    # ---------- Funciones auxiliares para pedir datos ----------
+    # Todas repiten la pregunta mientras el dato sea inválido.
+    # Si el usuario deja el dato vacío devuelven None, que significa "cancelar".
+
+    def pedir_texto(mensaje):
+        valor = input(mensaje).strip()
+        return valor if valor else None
+
+
+    def pedir_entero(mensaje, minimo=None):
+        while True:
+            respuesta = input(mensaje).strip()
+            if not respuesta:
+                return None
+            try:
+                numero = int(respuesta)
+            except ValueError:
+                print("Debe ingresar un número entero.")
+                continue
+            if minimo is not None and numero < minimo:
+                print(f"El número debe ser mayor o igual a {minimo}.")
+                continue
+            return numero
+
+
+    def pedir_decimal(mensaje, minimo=None):
+        while True:
+            respuesta = input(mensaje).strip()
+            if not respuesta:
+                return None
+            try:
+                numero = float(respuesta)
+            except ValueError:
+                print("Debe ingresar un número (use punto para los decimales, ej. 1.5).")
+                continue
+            if minimo is not None and numero < minimo:
+                print(f"El número debe ser mayor o igual a {minimo}.")
+                continue
+            return numero
+
+
+    def pedir_fecha(mensaje):
+        # Formato AAAA-MM-DD; no se aceptan fechas futuras
+        while True:
+            respuesta = input(mensaje).strip()
+            if not respuesta:
+                return None
+            try:
+                fecha = datetime.date.fromisoformat(respuesta)
+            except ValueError:
+                print("Fecha inválida: use el formato AAAA-MM-DD (ej. 1990-05-23).")
+                continue
+            if fecha > datetime.date.today():
+                print("La fecha no puede ser futura.")
+                continue
+            return fecha
+
+
+    def pedir_opcion(mensaje, opciones):
+        # opciones es un diccionario "lo que se tipea" -> valor; repite hasta que la clave exista
+        while True:
+            respuesta = input(mensaje).strip()
+            if not respuesta:
+                return None
+            if respuesta in opciones:
+                return opciones[respuesta]
             print("Opción inválida.")
 
 
-    def registrar_maquinaria():
-        id_unico = input("ID único de la maquinaria: ")
+    def elegir_de_lista(elementos, mensaje):
+        # Elige un elemento de una lista ya mostrada en pantalla con números desde 1.
+        # Se arma un diccionario "1" -> primer elemento, "2" -> segundo, etc.
+        opciones = {str(i): e for i, e in enumerate(elementos, start=1)}
+        return pedir_opcion(mensaje, opciones)
 
-
-        try:
-            nueva = Maquinaria(id_unico)           #si el id es vacio salta el error.
-            sistema.registrar_maquinaria(nueva)
-        except ValueError as e:
-            print(f"Error: {e}")
-            return
-
-        print(f"Maquinaria {id_unico} registrada como Plenamente Operativa.")
-
-
-    def listar_maquinaria():
-        if not sistema.maquinas:
-            print("No hay maquinaria registrada.")
-            return
-        for m in sistema.maquinas.values():
-            print(f"ID: {m.id_unico} | Estado: {m.estado.value}")
-
-
-    def cambiar_estado_maquinaria():
-        id_unico = input("ID de la maquinaria: ")
-        maquinaria = sistema.buscar_maquinaria(id_unico)
-        if maquinaria is None:
-            print(f"Error: no existe maquinaria con ID {id_unico}.")
-            return
-
-        print("\n--- Nuevo estado ---")
-        print("1. Plenamente Operativa")
-        print("2. En Proceso de Mantenimiento")
-        print("3. Falla Declarada")
-
-        opciones_estado = {
-            "1": EstadoMaquinaria.PLENAMENTE_OPERATIVA,
-            "2": EstadoMaquinaria.EN_PROCESO_MANTENIMIENTO,
-            "3": EstadoMaquinaria.FALLA_DECLARADA,
-        }
-        nuevo_estado = opciones_estado.get(input("Seleccione una opción: "))
-        if nuevo_estado is None:
-            print("Opción inválida.")
-            return
-
-        # Diccionario con los datos extra del cambio de estado; solo se llena si es una falla.
-        # Después se pasa con ** a set_estado_maquinaria, que lo recibe como kwargs.
-        datos_falla = {}
-
-        if nuevo_estado == EstadoMaquinaria.FALLA_DECLARADA:
-            datos_falla["descripcion_falla"] = input("Descripción de la falla: ")
-            datos_falla["causa"] = input("Causa de la falla: ")
-
-            if maquinaria.dispositivos:
-                print("Dispositivo que originó la falla (opcional):")
-                for i, d in enumerate(maquinaria.dispositivos, start=1):
-                    print(f"{i}. {d.tipo_de_variable} (umbral: {d.umbral_limite})")
-                respuesta = input("Número de dispositivo, o Enter para omitir: ").strip()
-                if respuesta:
-                    try:
-                        datos_falla["dispositivo_origen"] = maquinaria.dispositivos[int(respuesta) - 1]
-                    except (ValueError, IndexError):
-                        print("Selección inválida, se omite el dispositivo de origen.")
-
-        try:
-            maquinaria.set_estado_maquinaria(nuevo_estado, **datos_falla)
-        except ValueError as e:
-            print(f"Error: {e}")
-            return
-
-        print(f"Maquinaria {id_unico} actualizada a estado: {nuevo_estado.value}")
-
-
-    def menu_dispositivos():
-        print("\n--- Gestión de Dispositivos de Medición ---")
-        print("1. Registrar nuevo dispositivo")
-        print("2. Listar dispositivos de una maquinaria")
-        print("3. Registrar lectura")
-        print("0. Volver")
-
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            registrar_dispositivo()
-        elif opcion == "2":
-            listar_dispositivos()
-        elif opcion == "3":
-            registrar_lectura_dispositivo()
-        elif opcion != "0":
-            print("Opción inválida.")
-
-
-    def registrar_dispositivo():
-        id_maquinaria = input("ID de la maquinaria a la que pertenece: ")
-        maquinaria = sistema.buscar_maquinaria(id_maquinaria)
-        if maquinaria is None:
-            print(f"Error: no existe maquinaria con ID {id_maquinaria}.")
-            return
-
-        try:
-            id_dispositivo = int(input("ID del dispositivo: "))
-            tipo_de_variable = input("Variable que monitorea (ej. temperatura, vibración): ")
-            umbral_limite = float(input("Umbral límite: "))
-        except ValueError:
-            print("Error: el ID y el umbral deben ser numéricos.")
-            return
-
-        # El ID del dispositivo no puede repetirse dentro de la misma maquinaria
-        if any(d.id == id_dispositivo for d in maquinaria.dispositivos):
-            print(f"Error: la maquinaria {maquinaria.id_unico} ya tiene un dispositivo con ID {id_dispositivo}.")
-            return
-
-        DispositivoMedicion(id_dispositivo, maquinaria, tipo_de_variable, umbral_limite)
-        print(f"Dispositivo {id_dispositivo} registrado en la maquinaria {maquinaria.id_unico}.")
-
-
-    def listar_dispositivos():
-        id_maquinaria = input("ID de la maquinaria: ")
-        maquinaria = sistema.buscar_maquinaria(id_maquinaria)
-        if maquinaria is None:
-            print(f"Error: no existe maquinaria con ID {id_maquinaria}.")
-            return
-
-        if not maquinaria.dispositivos:
-            print("Esta maquinaria no tiene dispositivos registrados.")
-            return
-
-        for d in maquinaria.dispositivos:
-            print(f"ID: {d.id} | Variable: {d.tipo_de_variable} | Umbral: {d.umbral_limite}")
-
-
-    def registrar_lectura_dispositivo():
-        id_maquinaria = input("ID de la maquinaria: ")
-        maquinaria = sistema.buscar_maquinaria(id_maquinaria)
-        if maquinaria is None:
-            print(f"Error: no existe maquinaria con ID {id_maquinaria}.")
-            return
-
-        if not maquinaria.dispositivos:
-            print("Esta maquinaria no tiene dispositivos registrados.")
-            return
-
-        print("Dispositivos disponibles:")
-        for i, d in enumerate(maquinaria.dispositivos, start=1):
-            print(f"{i}. {d.tipo_de_variable} (umbral: {d.umbral_limite})")
-
-        try:
-            indice = int(input("Seleccione el dispositivo: ")) - 1
-            dispositivo = maquinaria.dispositivos[indice]
-            valor = float(input("Valor medido: "))
-        except (ValueError, IndexError):
-            print("Error: selección o valor inválido.")
-            return
-
-        try:
-            aviso = dispositivo.registrar_lectura(valor)
-        except ValueError as e:
-            print(f"Error: {e}")
-            return
-
-        if aviso is not None:
-            print(f"¡Aviso generado! {aviso}")
-        else:
-            print("Lectura registrada sin novedades.")
-
-
-    # ---------- Funciones auxiliares para pedir datos (las usan varios menús) ----------
 
     def elegir_maquinaria():
-        # Pide un ID y devuelve la maquinaria, o None (con mensaje) si no existe
-        id_unico = input("ID de la maquinaria: ")
-        maquinaria = sistema.buscar_maquinaria(id_unico)
-        if maquinaria is None:
-            print(f"Error: no existe maquinaria con ID {id_unico}.")
-        return maquinaria
+        # Pide el ID hasta que exista una maquinaria con ese ID
+        while True:
+            id_unico = pedir_texto("ID de la maquinaria: ")
+            if id_unico is None:
+                return None
+            maquinaria = sistema.buscar_maquinaria(id_unico)
+            if maquinaria is not None:
+                return maquinaria
+            print(f"No existe maquinaria con ID {id_unico}. Ingréselo de nuevo.")
 
 
     def elegir_tecnico():
-        # Pide un ID numérico y devuelve el técnico, o None si no existe
-        try:
-            id_tecnico = int(input("ID del técnico: "))
-        except ValueError:
-            print("Error: el ID debe ser numérico.")
-            return None
-        tecnico = sistema.buscar_personal(id_tecnico)
-        if tecnico is None:
-            print(f"Error: no existe personal con ID {id_tecnico}.")
-        return tecnico
+        # Pide el ID hasta que exista un técnico con ese ID
+        while True:
+            id_tecnico = pedir_entero("ID del técnico: ")
+            if id_tecnico is None:
+                return None
+            tecnico = sistema.buscar_personal(id_tecnico)
+            if tecnico is not None:
+                return tecnico
+            print(f"No existe personal con ID {id_tecnico}. Ingréselo de nuevo.")
 
 
     def elegir_especialidad():
-        # Arma un diccionario número -> Especialidad a partir del Enum, así el menú
+        # Diccionario número -> Especialidad armado a partir del Enum, así el menú
         # se actualiza solo si se agrega una especialidad nueva
         opciones = {str(i): esp for i, esp in enumerate(Especialidad, start=1)}
         for numero, esp in opciones.items():
             print(f"{numero}. {esp.value}")
-        especialidad = opciones.get(input("Seleccione la especialidad: "))
-        if especialidad is None:
-            print("Opción inválida.")
-        return especialidad
+        return pedir_opcion("Seleccione la especialidad: ", opciones)
 
 
     def pedir_componentes():
         # Arma el diccionario componente -> cantidad que necesita un programa (Regla 6).
-        # Se cargan de a uno; Enter vacío termina. Devuelve None si hubo un error.
+        # Se cargan de a uno y Enter vacío termina la carga.
         componentes_requeridos = {}
         if not sistema.componentes:
             print("No hay componentes registrados; el programa no usará repuestos.")
@@ -291,21 +200,16 @@ def main():
             print(f"  ID {c.id}: {c.nombre} (stock: {c.cantidad})")
 
         while True:
-            respuesta = input("ID del componente a usar (Enter para terminar): ").strip()
-            if not respuesta:
+            id_componente = pedir_entero("ID del componente a usar (Enter para terminar): ")
+            if id_componente is None:
                 return componentes_requeridos
-            try:
-                componente = sistema.buscar_componente(int(respuesta))
-                if componente is None:
-                    print("No existe un componente con ese ID.")
-                    continue
-                cantidad = int(input(f"Cantidad de {componente.nombre}: "))
-                if cantidad <= 0:
-                    print("La cantidad debe ser mayor a cero.")
-                    continue
-            except ValueError:
-                print("Error: el ID y la cantidad deben ser numéricos.")
-                return None
+            componente = sistema.buscar_componente(id_componente)
+            if componente is None:
+                print("No existe un componente con ese ID.")
+                continue
+            cantidad = pedir_entero(f"Cantidad de {componente.nombre}: ", minimo=1)
+            if cantidad is None:
+                continue
             # El stock no se controla acá: se verifica al iniciar la ejecución (Regla 6)
             componentes_requeridos[componente] = cantidad
 
@@ -319,14 +223,7 @@ def main():
             print("Esta maquinaria no tiene programas de intervención.")
             return None
         mostrar_programas(maquinaria)
-        try:
-            indice = int(input("Seleccione el programa: ")) - 1
-            if indice < 0:
-                raise IndexError
-            return maquinaria.programas[indice]
-        except (ValueError, IndexError):
-            print("Error: selección inválida.")
-            return None
+        return elegir_de_lista(maquinaria.programas, "Seleccione el programa: ")
 
 
     def mostrar_programas(maquinaria):
@@ -343,52 +240,231 @@ def main():
                 print(f"     Cada {p.periodicidad} días | Próxima fecha: {p.fecha_programada}")
 
 
+    # ---------- 1. Maquinaria ----------
+
+    def menu_maquinaria():
+        ejecutar_submenu("Gestión de Maquinaria", {
+            "1": ("Registrar nueva maquinaria", registrar_maquinaria),
+            "2": ("Listar maquinaria", listar_maquinaria),
+            "3": ("Cambiar estado de maquinaria", cambiar_estado_maquinaria),
+        })
+
+
+    def registrar_maquinaria():
+        # Regla 1: el ID no puede faltar ni repetirse; si está repetido se vuelve a pedir
+        while True:
+            id_unico = pedir_texto("ID único de la maquinaria: ")
+            if id_unico is None:
+                return
+            if id_unico in sistema.maquinas:
+                print(f"Ya existe una maquinaria con el ID {id_unico}. Ingrese otro.")
+                continue
+            break
+
+        sistema.registrar_maquinaria(Maquinaria(id_unico))
+        print(f"Maquinaria {id_unico} registrada como Plenamente Operativa.")
+
+
+    def listar_maquinaria():
+        if not sistema.maquinas:
+            print("No hay maquinaria registrada.")
+            return
+        for m in sistema.maquinas.values():
+            print(f"ID: {m.id_unico} | Estado: {m.estado.value}")
+
+
+    def cambiar_estado_maquinaria():
+        maquinaria = elegir_maquinaria()
+        if maquinaria is None:
+            return
+
+        print("\n--- Nuevo estado ---")
+        print("1. Plenamente Operativa")
+        print("2. En Proceso de Mantenimiento")
+        print("3. Falla Declarada")
+
+        opciones_estado = {
+            "1": EstadoMaquinaria.PLENAMENTE_OPERATIVA,
+            "2": EstadoMaquinaria.EN_PROCESO_MANTENIMIENTO,
+            "3": EstadoMaquinaria.FALLA_DECLARADA,
+        }
+        nuevo_estado = pedir_opcion("Seleccione una opción: ", opciones_estado)
+        if nuevo_estado is None:
+            return
+
+        # Diccionario con los datos extra del cambio de estado; solo se llena si es una falla.
+        # Después se pasa con ** a set_estado_maquinaria, que lo recibe como kwargs.
+        datos_falla = {}
+
+        if nuevo_estado == EstadoMaquinaria.FALLA_DECLARADA:
+            descripcion = pedir_texto("Descripción de la falla: ")
+            if descripcion is None:
+                return
+            causa = pedir_texto("Causa de la falla: ")
+            if causa is None:
+                return
+            datos_falla["descripcion_falla"] = descripcion
+            datos_falla["causa"] = causa
+
+            if maquinaria.dispositivos:
+                print("Dispositivo que originó la falla (opcional):")
+                for i, d in enumerate(maquinaria.dispositivos, start=1):
+                    print(f"{i}. {d.tipo_de_variable} (umbral: {d.umbral_limite})")
+                # Acá Enter vacío no cancela: significa "sin dispositivo de origen"
+                dispositivo = elegir_de_lista(maquinaria.dispositivos, "Número de dispositivo, o Enter para omitir: ")
+                if dispositivo is not None:
+                    datos_falla["dispositivo_origen"] = dispositivo
+
+        try:
+            maquinaria.set_estado_maquinaria(nuevo_estado, **datos_falla)
+        except ValueError as e:
+            print(f"Error: {e}")
+            return
+
+        print(f"Maquinaria {maquinaria.id_unico} actualizada a estado: {nuevo_estado.value}")
+
+
+    # ---------- 2. Dispositivos de medición ----------
+
+    def menu_dispositivos():
+        ejecutar_submenu("Gestión de Dispositivos de Medición", {
+            "1": ("Registrar nuevo dispositivo", registrar_dispositivo),
+            "2": ("Listar dispositivos de una maquinaria", listar_dispositivos),
+            "3": ("Registrar lectura", registrar_lectura_dispositivo),
+        })
+
+
+    def registrar_dispositivo():
+        print("Maquinaria a la que pertenece:")
+        maquinaria = elegir_maquinaria()
+        if maquinaria is None:
+            return
+
+        # El ID del dispositivo no puede repetirse dentro de la misma maquinaria
+        while True:
+            id_dispositivo = pedir_entero("ID del dispositivo: ")
+            if id_dispositivo is None:
+                return
+            if any(d.id == id_dispositivo for d in maquinaria.dispositivos):
+                print(f"La maquinaria {maquinaria.id_unico} ya tiene un dispositivo con ID {id_dispositivo}. Ingrese otro.")
+                continue
+            break
+
+        tipo_de_variable = pedir_texto("Variable que monitorea (ej. temperatura, vibración): ")
+        if tipo_de_variable is None:
+            return
+        umbral_limite = pedir_decimal("Umbral límite: ")
+        if umbral_limite is None:
+            return
+
+        DispositivoMedicion(id_dispositivo, maquinaria, tipo_de_variable, umbral_limite)
+        print(f"Dispositivo {id_dispositivo} registrado en la maquinaria {maquinaria.id_unico}.")
+
+
+    def listar_dispositivos():
+        maquinaria = elegir_maquinaria()
+        if maquinaria is None:
+            return
+
+        if not maquinaria.dispositivos:
+            print("Esta maquinaria no tiene dispositivos registrados.")
+            return
+
+        for d in maquinaria.dispositivos:
+            print(f"ID: {d.id} | Variable: {d.tipo_de_variable} | Umbral: {d.umbral_limite}")
+
+
+    def registrar_lectura_dispositivo():
+        maquinaria = elegir_maquinaria()
+        if maquinaria is None:
+            return
+
+        if not maquinaria.dispositivos:
+            print("Esta maquinaria no tiene dispositivos registrados.")
+            return
+
+        print("Dispositivos disponibles:")
+        for i, d in enumerate(maquinaria.dispositivos, start=1):
+            print(f"{i}. {d.tipo_de_variable} (umbral: {d.umbral_limite})")
+
+        dispositivo = elegir_de_lista(maquinaria.dispositivos, "Seleccione el dispositivo: ")
+        if dispositivo is None:
+            return
+        valor = pedir_decimal("Valor medido: ")
+        if valor is None:
+            return
+
+        try:
+            aviso = dispositivo.registrar_lectura(valor)
+        except ValueError as e:
+            print(f"Error: {e}")
+            return
+
+        if aviso is not None:
+            print(f"¡Aviso generado! {aviso}")
+        else:
+            print("Lectura registrada sin novedades.")
+
+
     # ---------- 3. Personal especializado ----------
 
     def menu_personal():
-        print("\n--- Gestión de Personal Especializado ---")
-        print("1. Registrar técnico")
-        print("2. Listar personal")
-        print("3. Dar de baja técnico (despido o renuncia)")
-        print("0. Volver")
-
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            registrar_personal()
-        elif opcion == "2":
-            listar_personal()
-        elif opcion == "3":
-            dar_de_baja_personal()
-        elif opcion != "0":
-            print("Opción inválida.")
+        ejecutar_submenu("Gestión de Personal Especializado", {
+            "1": ("Registrar técnico", registrar_personal),
+            "2": ("Listar personal", listar_personal),
+            "3": ("Dar de baja técnico (despido o renuncia)", dar_de_baja_personal),
+        })
 
 
     def registrar_personal():
-        try:
-            id_tecnico = int(input("ID del técnico: "))
-            fecha_nacimiento = datetime.date.fromisoformat(input("Fecha de nacimiento (AAAA-MM-DD): "))
-            # Enter vacío = ingresa hoy; se usa para calcular el tiempo en la empresa al darlo de baja
-            respuesta_ingreso = input("Fecha de ingreso a la empresa (AAAA-MM-DD, Enter = hoy): ").strip()
-            fecha_ingreso = datetime.date.fromisoformat(respuesta_ingreso) if respuesta_ingreso else None
-        except ValueError:
-            print("Error: el ID debe ser numérico y las fechas con formato AAAA-MM-DD.")
+        # El ID no puede repetirse; si ya existe se vuelve a pedir
+        while True:
+            id_tecnico = pedir_entero("ID del técnico: ")
+            if id_tecnico is None:
+                return
+            if id_tecnico in sistema.personal:
+                print(f"Ya existe personal con el ID {id_tecnico}. Ingrese otro.")
+                continue
+            break
+
+        nombre = pedir_texto("Nombre: ")
+        if nombre is None:
             return
-        nombre = input("Nombre: ")
-        apellido = input("Apellido: ")
+        apellido = pedir_texto("Apellido: ")
+        if apellido is None:
+            return
+        fecha_nacimiento = pedir_fecha("Fecha de nacimiento (AAAA-MM-DD): ")
+        if fecha_nacimiento is None:
+            return
+
+        # Fecha de ingreso: acá Enter vacío no cancela, significa "ingresa hoy".
+        # Se usa para calcular el tiempo en la empresa al darlo de baja.
+        while True:
+            respuesta = input("Fecha de ingreso a la empresa (AAAA-MM-DD, Enter = hoy): ").strip()
+            if not respuesta:
+                fecha_ingreso = None
+                break
+            try:
+                fecha_ingreso = datetime.date.fromisoformat(respuesta)
+            except ValueError:
+                print("Fecha inválida: use el formato AAAA-MM-DD.")
+                continue
+            if fecha_ingreso > datetime.date.today():
+                print("La fecha de ingreso no puede ser futura.")
+                continue
+            if fecha_ingreso < fecha_nacimiento:
+                print("La fecha de ingreso no puede ser anterior a la de nacimiento.")
+                continue
+            break
+
         especialidad = elegir_especialidad()
         if especialidad is None:
             return
 
-        try:
-            # SIMPIA controla que el ID no esté repetido
-            sistema.registrar_personal(
-                PersonalEspecializado(id_tecnico, nombre, apellido, especialidad, fecha_nacimiento,
-                                      fecha_ingreso=fecha_ingreso)
-            )
-        except ValueError as e:
-            print(f"Error: {e}")
-            return
+        sistema.registrar_personal(
+            PersonalEspecializado(id_tecnico, nombre, apellido, especialidad, fecha_nacimiento,
+                                  fecha_ingreso=fecha_ingreso)
+        )
         print(f"Técnico {nombre} {apellido} registrado ({especialidad.value}).")
 
 
@@ -417,8 +493,9 @@ def main():
             return
 
         # Confirmación antes de una acción que no se puede deshacer
-        confirmacion = input(f"¿Confirma la baja de {tecnico.nombre} {tecnico.apellido}? (s/n): ")
-        if confirmacion.strip().lower() != "s":
+        confirmacion = pedir_opcion(f"¿Confirma la baja de {tecnico.nombre} {tecnico.apellido}? (s/n): ",
+                                    {"s": True, "S": True, "n": False, "N": False})
+        if not confirmacion:
             print("Baja cancelada.")
             return
 
@@ -440,41 +517,32 @@ def main():
     # ---------- 4. Componentes de recambio ----------
 
     def menu_componentes():
-        print("\n--- Gestión de Componentes de Recambio ---")
-        print("1. Registrar componente")
-        print("2. Listar componentes y stock")
-        print("3. Reponer stock")
-        print("0. Volver")
-
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            registrar_componente()
-        elif opcion == "2":
-            listar_componentes()
-        elif opcion == "3":
-            reponer_stock()
-        elif opcion != "0":
-            print("Opción inválida.")
+        ejecutar_submenu("Gestión de Componentes de Recambio", {
+            "1": ("Registrar componente", registrar_componente),
+            "2": ("Listar componentes y stock", listar_componentes),
+            "3": ("Reponer stock", reponer_stock),
+        })
 
 
     def registrar_componente():
-        try:
-            id_componente = int(input("ID del componente: "))
-            nombre = input("Nombre: ")
-            cantidad = int(input("Cantidad inicial en stock: "))
-        except ValueError:
-            print("Error: el ID y la cantidad deben ser numéricos.")
+        # El ID no puede repetirse; si ya existe se vuelve a pedir
+        while True:
+            id_componente = pedir_entero("ID del componente: ")
+            if id_componente is None:
+                return
+            if id_componente in sistema.componentes:
+                print(f"Ya existe un componente con el ID {id_componente}. Ingrese otro.")
+                continue
+            break
+
+        nombre = pedir_texto("Nombre: ")
+        if nombre is None:
             return
-        if cantidad < 0:
-            print("Error: la cantidad no puede ser negativa.")
+        cantidad = pedir_entero("Cantidad inicial en stock: ", minimo=0)
+        if cantidad is None:
             return
 
-        try:
-            sistema.registrar_componente(ComponenteRecambio(id_componente, nombre, cantidad))
-        except ValueError as e:
-            print(f"Error: {e}")
-            return
+        sistema.registrar_componente(ComponenteRecambio(id_componente, nombre, cantidad))
         print(f"Componente {nombre} registrado con {cantidad} unidades.")
 
 
@@ -487,52 +555,47 @@ def main():
 
 
     def reponer_stock():
-        try:
-            componente = sistema.buscar_componente(int(input("ID del componente: ")))
-            if componente is None:
-                print("Error: no existe un componente con ese ID.")
-                return
-            # setter_agregar_stock valida que la cantidad sea mayor a cero
-            componente.setter_agregar_stock(int(input("Cantidad a agregar: ")))
-        except ValueError as e:
-            print(f"Error: {e}")
+        if not sistema.componentes:
+            print("No hay componentes registrados.")
             return
+        listar_componentes()
+        while True:
+            id_componente = pedir_entero("ID del componente: ")
+            if id_componente is None:
+                return
+            componente = sistema.buscar_componente(id_componente)
+            if componente is not None:
+                break
+            print("No existe un componente con ese ID. Ingréselo de nuevo.")
+
+        cantidad = pedir_entero("Cantidad a agregar: ", minimo=1)
+        if cantidad is None:
+            return
+        componente.setter_agregar_stock(cantidad)
         print(f"Stock de {componente.nombre} actualizado: {componente.get_stock()} unidades.")
 
 
     # ---------- 5. Programas de intervención ----------
 
     def menu_programas():
-        print("\n--- Gestión de Programas de Intervención ---")
-        print("1. Crear programa preventivo")
-        print("2. Crear programa correctivo (a partir de un aviso activo)")
-        print("3. Listar programas de una maquinaria")
-        print("4. Asignar técnico a un programa")
-        print("5. Iniciar ejecución de un programa")
-        print("6. Finalizar programa")
-        print("0. Volver")
+        ejecutar_submenu("Gestión de Programas de Intervención", {
+            "1": ("Crear programa preventivo", crear_programa_preventivo),
+            "2": ("Crear programa correctivo (a partir de un aviso activo)", crear_programa_correctivo),
+            "3": ("Listar programas de una maquinaria", listar_programas),
+            "4": ("Asignar técnico a un programa", asignar_tecnico_a_programa),
+            "5": ("Iniciar ejecución de un programa", iniciar_programa),
+            "6": ("Finalizar programa", finalizar_programa),
+        })
 
-        opcion = input("Seleccione una opción: ")
 
-        if opcion == "1":
-            crear_programa_preventivo()
-        elif opcion == "2":
-            crear_programa_correctivo()
-        elif opcion == "3":
-            maquinaria = elegir_maquinaria()
-            if maquinaria is not None:
-                if maquinaria.programas:
-                    mostrar_programas(maquinaria)
-                else:
-                    print("Esta maquinaria no tiene programas de intervención.")
-        elif opcion == "4":
-            asignar_tecnico_a_programa()
-        elif opcion == "5":
-            iniciar_programa()
-        elif opcion == "6":
-            finalizar_programa()
-        elif opcion != "0":
-            print("Opción inválida.")
+    def listar_programas():
+        maquinaria = elegir_maquinaria()
+        if maquinaria is None:
+            return
+        if maquinaria.programas:
+            mostrar_programas(maquinaria)
+        else:
+            print("Esta maquinaria no tiene programas de intervención.")
 
 
     def crear_programa_preventivo():
@@ -540,20 +603,22 @@ def main():
         maquinaria = elegir_maquinaria()
         if maquinaria is None:
             return
-        procedimiento = input("Procedimiento a realizar: ")
-        tipo_equipo = input("Tipo de equipo (ej. prensa hidráulica): ")
-        try:
-            tiempo_requerido = float(input("Tiempo estimado (horas): "))
-            periodicidad = int(input("Periodicidad (cada cuántos días): "))
-        except ValueError:
-            print("Error: el tiempo y la periodicidad deben ser numéricos.")
+        procedimiento = pedir_texto("Procedimiento a realizar: ")
+        if procedimiento is None:
+            return
+        tipo_equipo = pedir_texto("Tipo de equipo (ej. prensa hidráulica): ")
+        if tipo_equipo is None:
+            return
+        tiempo_requerido = pedir_decimal("Tiempo estimado (horas): ", minimo=0)
+        if tiempo_requerido is None:
+            return
+        periodicidad = pedir_entero("Periodicidad (cada cuántos días): ", minimo=1)
+        if periodicidad is None:
             return
         especialidad = elegir_especialidad()
         if especialidad is None:
             return
         componentes = pedir_componentes()
-        if componentes is None:
-            return
 
         ProgramaPreventivo(maquinaria, procedimiento, componentes, tiempo_requerido,
                            especialidad, periodicidad, tipo_equipo)
@@ -573,16 +638,17 @@ def main():
         print("Avisos activos:")
         for i, a in enumerate(avisos_activos, start=1):
             print(f"{i}. {a} | Parámetro: {a.parametro_anomalo}")
-        try:
-            indice = int(input("Seleccione el aviso: ")) - 1
-            if indice < 0:
-                raise IndexError
-            aviso = avisos_activos[indice]
-            procedimiento = input("Procedimiento a realizar: ")
-            tipo_equipo = input("Tipo de equipo (ej. prensa hidráulica): ")
-            tiempo_requerido = float(input("Tiempo estimado (horas): "))
-        except (ValueError, IndexError):
-            print("Error: selección o valor inválido.")
+        aviso = elegir_de_lista(avisos_activos, "Seleccione el aviso: ")
+        if aviso is None:
+            return
+        procedimiento = pedir_texto("Procedimiento a realizar: ")
+        if procedimiento is None:
+            return
+        tipo_equipo = pedir_texto("Tipo de equipo (ej. prensa hidráulica): ")
+        if tipo_equipo is None:
+            return
+        tiempo_requerido = pedir_decimal("Tiempo estimado (horas): ", minimo=0)
+        if tiempo_requerido is None:
             return
 
         # Regla 7: se intenta deducir la especialidad a partir de la variable anómala;
@@ -597,8 +663,6 @@ def main():
                 return
 
         componentes = pedir_componentes()
-        if componentes is None:
-            return
 
         try:
             ProgramaCorrectivo(maquinaria, procedimiento, componentes, tiempo_requerido,
@@ -613,16 +677,19 @@ def main():
         programa = elegir_programa()
         if programa is None:
             return
-        tecnico = elegir_tecnico()
-        if tecnico is None:
+        # Si el técnico no sirve para este programa (otra especialidad u ocupado), se pide otro
+        while True:
+            tecnico = elegir_tecnico()
+            if tecnico is None:
+                return
+            try:
+                # Regla 7: el programa rechaza técnicos de otra especialidad u ocupados
+                programa.asignar_personal(tecnico)
+            except ValueError as e:
+                print(f"Error: {e}. Ingrese otro técnico.")
+                continue
+            print(f"{tecnico.nombre} {tecnico.apellido} asignado al programa.")
             return
-        try:
-            # Regla 7: el programa rechaza técnicos de otra especialidad u ocupados
-            programa.asignar_personal(tecnico)
-        except ValueError as e:
-            print(f"Error: {e}")
-            return
-        print(f"{tecnico.nombre} {tecnico.apellido} asignado al programa.")
 
 
     def iniciar_programa():
@@ -653,24 +720,17 @@ def main():
         if programa.es_correctivo:
             print(f"Aviso resuelto. Estado de {programa.maquinaria.id_unico}: "
                   f"{programa.maquinaria.estado.value}")
+        else:
+            print(f"El programa preventivo quedó reprogramado para el {programa.fecha_programada}.")
 
 
     # ---------- 6. Avisos ----------
 
     def menu_avisos():
-        print("\n--- Gestión de Avisos ---")
-        print("1. Listar avisos")
-        print("2. Desactivar un aviso manualmente (personal capacitado)")
-        print("0. Volver")
-
-        opcion = input("Seleccione una opción: ")
-
-        if opcion == "1":
-            ver_avisos()
-        elif opcion == "2":
-            desactivar_aviso()
-        elif opcion != "0":
-            print("Opción inválida.")
+        ejecutar_submenu("Gestión de Avisos", {
+            "1": ("Listar avisos", ver_avisos),
+            "2": ("Desactivar un aviso manualmente (personal capacitado)", desactivar_aviso),
+        })
 
 
     def ver_avisos():
@@ -691,14 +751,9 @@ def main():
             return
         for a in activos:
             print(a)
-        try:
-            id_aviso = int(input("ID del aviso a desactivar: "))
-        except ValueError:
-            print("Error: el ID debe ser numérico.")
-            return
-        aviso = next((a for a in activos if a.id_aviso == id_aviso), None)
+        # Diccionario id del aviso (como texto) -> aviso, para elegirlo por su ID
+        aviso = pedir_opcion("ID del aviso a desactivar: ", {str(a.id_aviso): a for a in activos})
         if aviso is None:
-            print("Error: no hay un aviso activo con ese ID.")
             return
         tecnico = elegir_tecnico()
         if tecnico is None:
@@ -706,6 +761,17 @@ def main():
         aviso.desactivar(tecnico)
         print(f"Aviso {aviso.id_aviso} resuelto por {tecnico.nombre} {tecnico.apellido} "
               f"el {aviso.fecha_cierre}.")
+
+
+    # ---------- 7. Historial ----------
+
+    def ver_historial():
+        eventos = sistema.listar_historial_eventos()
+        if not eventos:
+            print("No hay eventos registrados.")
+            return
+        for evento in eventos:
+            print(evento)
 
 
     # ---------- 8. Datos de ejemplo ----------
@@ -756,14 +822,6 @@ def main():
         print("  Dispositivos: 1 presión (umbral 100) en PRENSA-01, 2 temperatura (umbral 80) en HORNO-02")
         print("  Sugerencia: registrá una lectura de 150 en el dispositivo de presión de PRENSA-01.")
 
-
-    def ver_historial():
-        eventos = sistema.listar_historial_eventos()
-        if not eventos:
-            print("No hay eventos registrados.")
-            return
-        for evento in eventos:
-            print(evento)
 
     menu_principal()
 
