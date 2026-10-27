@@ -189,12 +189,15 @@ def menu_maquinaria(sistema):
 
 
 def registrar_maquinaria(sistema):
-    # Regla 1: el ID no puede faltar ni repetirse; si está repetido se vuelve a pedir
+    # Regla 1: el ID no puede faltar, tiene que ser alfanumérico, y no puede repetirse
     while True:
-        id_unico = pedir_texto("ID único de la maquinaria: ")
+        id_unico = pedir_texto("ID único de la maquinaria (letras, números, '-' o '_'): ")
         if id_unico is None:
             return
-        if id_unico in sistema.maquinas:
+        if not Maquinaria.id_valido(id_unico):
+            print("ID inválido: solo se permiten letras, números, '-' y '_'. Ingrese otro.")
+            continue
+        if sistema.buscar_maquinaria(id_unico) is not None:
             print(f"Ya existe una maquinaria con el ID {id_unico}. Ingrese otro.")
             continue
         break
@@ -351,6 +354,7 @@ def menu_personal(sistema):
         "1": ("Registrar técnico", registrar_personal),
         "2": ("Listar personal", listar_personal),
         "3": ("Dar de baja técnico (despido o renuncia)", dar_de_baja_personal),
+        "4": ("Procesar próximo trabajo pendiente de un técnico", procesar_siguiente_trabajo),
     })
 
 
@@ -450,6 +454,25 @@ def dar_de_baja_personal(sistema):
     for programa in programas_afectados:
         print(f"  Se lo quitó del programa '{programa.procedimiento}' de {programa.maquinaria.id_unico}; "
               f"hay que asignar otro técnico.")
+
+
+def procesar_siguiente_trabajo(sistema):
+    if not sistema.personal:
+        print("No hay personal registrado.")
+        return
+    tecnico = elegir_tecnico(sistema)
+    if tecnico is None:
+        return
+    try:
+        # Desencola el próximo programa pendiente del técnico, lo inicia y lo finaliza;
+        # si algún programa en el medio ya lo atendió otro técnico (puede pasar: un
+        # programa admite varios técnicos), lo descarta solo y sigue con el próximo.
+        programa = tecnico.get_ejecutar_siguiente_trabajo()
+    except ValueError as e:
+        print(f"Error: {e}")
+        return
+    print(f"{tecnico.nombre} {tecnico.apellido} atendió y finalizó: '{programa.procedimiento}' "
+          f"en {programa.maquinaria.id_unico}.")
 
 
 # ---------- 4. Componentes de recambio ----------
@@ -753,6 +776,55 @@ def ver_historial(sistema):
         print(evento)
 
 
+# ---------- 8. Datos de ejemplo ----------
+
+def cargar_datos_ejemplo(sistema):
+    # Carga un escenario listo para probar el sistema o hacer la demo. Contiene:
+    #   Maquinarias:  PRENSA-01 y HORNO-02 (ambas plenamente operativas)
+    #   Personal:     1 Juan Pérez (mecánico, ingresó 2015-03-02), 2 Lucía Gómez (hidráulico, 2019-07-15),
+    #                 3 Martín Díaz (electrónico, 2022-11-01)
+    #   Componentes:  1 Junta hidráulica (10 u.), 2 Rodamiento (6 u.), 3 Fusible (20 u.)
+    #   Dispositivos: 1 presión, umbral 100, en PRENSA-01 / 2 temperatura, umbral 80, en HORNO-02
+    # No crea avisos ni programas: se generan durante la prueba (ej. una lectura de 150 en el
+    # dispositivo de presión genera un aviso, y su correctivo requiere un técnico hidráulico).
+    if sistema.buscar_maquinaria("PRENSA-01") is not None:
+        print("Los datos de ejemplo ya estaban cargados.")
+        return
+
+    prensa = Maquinaria("PRENSA-01")
+    horno = Maquinaria("HORNO-02")
+    for m in (prensa, horno):
+        sistema.registrar_maquinaria(m)
+
+    for tecnico in (
+        PersonalEspecializado(1, "Juan", "Pérez", Especialidad.mecanico, datetime.date(1985, 4, 12),
+                              fecha_ingreso=datetime.date(2015, 3, 2)),
+        PersonalEspecializado(2, "Lucía", "Gómez", Especialidad.hidraulico, datetime.date(1990, 9, 3),
+                              fecha_ingreso=datetime.date(2019, 7, 15)),
+        PersonalEspecializado(3, "Martín", "Díaz", Especialidad.electronico, datetime.date(1988, 1, 25),
+                              fecha_ingreso=datetime.date(2022, 11, 1)),
+    ):
+        sistema.registrar_personal(tecnico)
+
+    for componente in (
+        ComponenteRecambio(1, "Junta hidráulica", 10),
+        ComponenteRecambio(2, "Rodamiento", 6),
+        ComponenteRecambio(3, "Fusible", 20),
+    ):
+        sistema.registrar_componente(componente)
+
+    DispositivoMedicion(1, prensa, "presión", 100.0)
+    DispositivoMedicion(2, horno, "temperatura", 80.0)
+
+    print("Datos de ejemplo cargados:")
+    print("  Maquinarias:  PRENSA-01, HORNO-02")
+    print("  Personal:     1 Juan Pérez (mecánico, desde 2015-03-02), 2 Lucía Gómez (hidráulico, desde 2019-07-15),")
+    print("                3 Martín Díaz (electrónico, desde 2022-11-01)")
+    print("  Componentes:  1 Junta hidráulica (10), 2 Rodamiento (6), 3 Fusible (20)")
+    print("  Dispositivos: 1 presión (umbral 100) en PRENSA-01, 2 temperatura (umbral 80) en HORNO-02")
+    print("  Sugerencia: registrá una lectura de 150 en el dispositivo de presión de PRENSA-01.")
+
+
 def ejecutar_submenu(sistema, titulo, opciones):
     # Submenú genérico: opciones es un diccionario número -> (texto, función).
     # Se queda abierto hasta elegir 0, igual que el menú principal; si la opción no existe,
@@ -787,6 +859,7 @@ def menu_principal(sistema):
         "5": menu_programas,
         "6": menu_avisos,
         "7": ver_historial,
+        "8": cargar_datos_ejemplo,
     }
 
     while True:
@@ -798,6 +871,7 @@ def menu_principal(sistema):
         print("5. Gestionar Programas de Intervención")
         print("6. Gestionar Avisos")
         print("7. Ver Historial de Eventos")
+        print("8. Cargar datos de ejemplo (para probar o hacer la demo)")
         print("0. Salir")
         print("(Los datos se guardan automáticamente después de cada operación)")
 
