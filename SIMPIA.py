@@ -9,6 +9,7 @@ from EventoFalla import EventoFalla
 from EventoCorrectivo import EventoCorrectivo
 from EventoPreventivo import EventoPreventivo
 from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
+from arbol import ArbolAgendaPreventivos
 import datetime
 import json
 
@@ -92,6 +93,18 @@ class SIMPIA:
 
     def listar_historial_eventos(self):
         return [evento for maquinaria in self.maquinas.values() for evento in maquinaria.historial]
+
+    def agenda_preventivos(self):
+        # Arma el árbol de la agenda con los preventivos que están esperando su próxima ejecución.
+        # Se arma en el momento de consultar, así siempre refleja las fechas actuales
+        # (un preventivo cambia de fecha cada vez que se completa y se reprograma).
+        # Los que están EN_EJECUCION no se incluyen: ya los está atendiendo alguien.
+        agenda = ArbolAgendaPreventivos()
+        for maquinaria in self.maquinas.values():
+            for programa in maquinaria.programas:
+                if not programa.es_correctivo and programa.estado == EstadoProgramaIntervencion.PROGRAMADO:
+                    agenda.insertar(programa)
+        return agenda
 
     # ---------- Persistencia (JSON) ----------
 

@@ -523,7 +523,48 @@ def menu_programas(sistema):
         "4": ("Asignar técnico a un programa", asignar_tecnico_a_programa),
         "5": ("Iniciar ejecución de un programa", iniciar_programa),
         "6": ("Finalizar programa", finalizar_programa),
+        "7": ("Ver agenda de preventivos (vencidos y próximos)", ver_agenda_preventivos),
     })
+
+
+def ver_agenda_preventivos(sistema):
+    # Usa el árbol binario de búsqueda (arbol.py) armado por SIMPIA con los preventivos pendientes
+    agenda = sistema.agenda_preventivos()
+    if agenda.esta_vacio():
+        print("No hay mantenimientos preventivos programados.")
+        return
+
+    hoy = datetime.date.today()
+    DIAS_PROXIMOS = 30
+
+    def mostrar(fecha, programa):
+        print(f"  {fecha} | {programa.maquinaria.id_unico} | {programa.procedimiento} "
+              f"| {programa.especialidad_requerida.value}")
+
+    # El próximo vencimiento sale del nodo de más a la izquierda del árbol
+    fecha_proxima, programas = agenda.proximo()
+    print(f"\nPróximo mantenimiento: {fecha_proxima} "
+          f"({', '.join(p.maquinaria.id_unico + ' - ' + p.procedimiento for p in programas)})")
+
+    # Consultas por rango: el árbol descarta las ramas que quedan fuera de cada rango
+    vencidos = agenda.entre(hasta=hoy - datetime.timedelta(days=1))
+    para_hoy = agenda.entre(desde=hoy, hasta=hoy)
+    proximos = agenda.entre(desde=hoy + datetime.timedelta(days=1),
+                            hasta=hoy + datetime.timedelta(days=DIAS_PROXIMOS))
+
+    print(f"\nVencidos ({len(vencidos)}):")
+    for fecha, programa in vencidos:
+        mostrar(fecha, programa)
+    print(f"\nPara hoy ({len(para_hoy)}):")
+    for fecha, programa in para_hoy:
+        mostrar(fecha, programa)
+    print(f"\nPróximos {DIAS_PROXIMOS} días ({len(proximos)}):")
+    for fecha, programa in proximos:
+        mostrar(fecha, programa)
+
+    restantes = agenda.tamanio - len(vencidos) - len(para_hoy) - len(proximos)
+    if restantes:
+        print(f"\nY {restantes} programado(s) para más adelante.")
 
 
 def listar_programas(sistema):
