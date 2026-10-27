@@ -267,12 +267,15 @@ def main():
 
 
     def registrar_maquinaria():
-        # Regla 1: el ID no puede faltar ni repetirse; si está repetido se vuelve a pedir
+        # Regla 1: el ID no puede faltar, tiene que ser alfanumérico, y no puede repetirse
         while True:
-            id_unico = pedir_texto("ID único de la maquinaria: ")
+            id_unico = pedir_texto("ID único de la maquinaria (letras, números, '-' o '_'): ")
             if id_unico is None:
                 return
-            if id_unico in sistema.maquinas:
+            if not Maquinaria.id_valido(id_unico):
+                print("ID inválido: solo se permiten letras, números, '-' y '_'. Ingrese otro.")
+                continue
+            if sistema.buscar_maquinaria(id_unico) is not None:
                 print(f"Ya existe una maquinaria con el ID {id_unico}. Ingrese otro.")
                 continue
             break
@@ -801,7 +804,7 @@ def main():
         #   Dispositivos: 1 presión, umbral 100, en PRENSA-01 / 2 temperatura, umbral 80, en HORNO-02
         # No crea avisos ni programas: se generan durante la prueba (ej. una lectura de 150 en el
         # dispositivo de presión genera un aviso, y su correctivo requiere un técnico hidráulico).
-        if "PRENSA-01" in sistema.maquinas:
+        if sistema.buscar_maquinaria("PRENSA-01") is not None:
             print("Los datos de ejemplo ya estaban cargados.")
             return
 

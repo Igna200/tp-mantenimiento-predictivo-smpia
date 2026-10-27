@@ -1,4 +1,5 @@
 import datetime
+import re
 from estados.EstadoMaquinaria import EstadoMaquinaria
 from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
@@ -6,11 +7,30 @@ from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
 from EventoFalla import EventoFalla
 
 class Maquinaria:
+    # Letras, números, '-' y '_' únicamente (ej. "PRENSA-01"); nada de espacios ni símbolos.
+    ID_PATTERN = re.compile(r'^[A-Za-z0-9_-]+$')
+
+    @staticmethod
+    def normalizar_id(id_unico):
+        # El usuario lo puede escribir con mayúsculas o espacios de más (al registrar, al
+        # buscar, da igual): siempre lo tratamos como el mismo ID. "PRENSA-01", "prensa-01"
+        # y "  Prensa-01  " terminan siendo el mismo identificador interno: "prensa-01".
+        if id_unico is None:
+            return None
+        return str(id_unico).strip().lower()
+
+    @staticmethod
+    def id_valido(id_unico):
+        id_normalizado = Maquinaria.normalizar_id(id_unico)
+        return id_normalizado is not None and bool(Maquinaria.ID_PATTERN.fullmatch(id_normalizado))
+
     def __init__(self, id_unico, fecha_ultimo_mantenimiento: datetime.date = None, historial=None):
-        # Regla 1: el ID no puede faltar
-        if id_unico is None or str(id_unico).strip() == "":
-            raise ValueError("La maquinaria debe tener un ID único")
-        self.id_unico=id_unico
+        # Regla 1: el ID no puede faltar, y ahora además solo puede ser alfanumérico
+        if not Maquinaria.id_valido(id_unico):
+            raise ValueError(
+                "El ID de la maquinaria debe ser alfanumérico (letras, números, '-' o '_') y no puede estar vacío"
+            )
+        self.id_unico=Maquinaria.normalizar_id(id_unico)
         self.estado=EstadoMaquinaria.PLENAMENTE_OPERATIVA  # Regla 1: al registrarse, siempre operativa
         self.fecha_ultimo_mantenimiento=fecha_ultimo_mantenimiento
         self.historial=historial if historial is not None else []

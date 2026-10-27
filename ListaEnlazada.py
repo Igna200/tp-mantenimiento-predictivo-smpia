@@ -83,20 +83,23 @@ class ListaEnlazada:
         
 
 
-Lista1=ListaEnlazada()
-Lista1.insertar_final(10)
-Lista1.insertar_final(20)
-Lista1.insertar_final(30)
-Lista1.insertar_final(40)
+if __name__ == "__main__":
+    # Prueba manual del archivo: solo corre si ejecutás ListaEnlazada.py directo,
+    # no cada vez que otro módulo (cola.py, y por lo tanto PersonalEspecializado.py) lo importa.
+    Lista1=ListaEnlazada()
+    Lista1.insertar_final(10)
+    Lista1.insertar_final(20)
+    Lista1.insertar_final(30)
+    Lista1.insertar_final(40)
 
-Lista1.insertar_inicio(5)
+    Lista1.insertar_inicio(5)
 
-print(Lista1.longitud())
+    print(Lista1.longitud())
 
-print(Lista1.buscar_posicion(30))
+    print(Lista1.buscar_posicion(30))
 
-Lista1.eliminar_ultimo()
+    Lista1.eliminar_ultimo()
 
-Lista1.eliminar_primero()
+    Lista1.eliminar_primero()
 
-print(Lista1.longitud())
+    print(Lista1.longitud())
