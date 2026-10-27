@@ -2,7 +2,6 @@ import pytest
 from DispositivoMedicion import DispositivoMedicion
 from Maquinaria import Maquinaria  # <--- Usamos la clase real
 from estados.EstadoMaquinaria import EstadoMaquinaria
-from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
 
 def test_lectura_maquinaria_no_operativa_lanza_value_error():

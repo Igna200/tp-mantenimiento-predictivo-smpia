@@ -12,6 +12,9 @@ class Nodo:
     def setter_nodo(self, set):
         self.dato=set
 
+    def setter_siguiente(self, nodo):
+        self.siguiente=nodo
+
 
 class ListaEnlazada:
     def __init__ (self):

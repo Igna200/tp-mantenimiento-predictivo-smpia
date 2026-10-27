@@ -14,7 +14,7 @@ class ColaProgramasTrabajo:
             self.frente = nuevo_nodo
             self.final = nuevo_nodo
         else:
-            self.final.siguiente = nuevo_nodo
+            self.final.setter_siguiente(nuevo_nodo)
             self.final = nuevo_nodo
         self.tamanio += 1
 
@@ -23,12 +23,12 @@ class ColaProgramasTrabajo:
         if self.frente is None:
             raise ValueError("No hay programas pendientes en la cola de trabajo.")
 
-        programa_atender = self.frente.dato
-        self.frente = self.frente.siguiente
-        
+        programa_atender = self.frente.getter_nodo()
+        self.frente = self.frente.getter_siguiente()
+
         if self.frente is None:  # Si la cola quedó vacía tras la extracción
             self.final = None
-            
+
         self.tamanio -= 1
         return programa_atender
 
@@ -36,7 +36,7 @@ class ColaProgramasTrabajo:
         """Método getter (Front): Consulta el programa en el frente sin sacarlo."""
         if self.frente is None:
             return None
-        return self.frente.dato
+        return self.frente.getter_nodo()
 
     def get_esta_vacia(self) -> bool:
         """Método getter: Indica si la cola no tiene trabajos pendientes."""
@@ -48,6 +48,6 @@ class ColaProgramasTrabajo:
         elementos = []
         actual = self.frente
         while actual is not None:
-            elementos.append(actual.dato)
-            actual = actual.siguiente
+            elementos.append(actual.getter_nodo())
+            actual = actual.getter_siguiente()
         return elementos
