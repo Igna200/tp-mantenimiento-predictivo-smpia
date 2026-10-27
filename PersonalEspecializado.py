@@ -1,6 +1,7 @@
 import datetime
 import calendar
 from estados.Especialidad import Especialidad
+from estados.EstadoProgramaIntervencion import EstadoProgramaIntervencion
 from cola import ColaProgramasTrabajo
 class PersonalEspecializado:
     def __init__(self, id:int, nombre:str,apellido: str, especialidad:Especialidad, fecha_nacimiento: datetime.date, disponibilidad:bool = True, fecha_ingreso: datetime.date = None):
@@ -15,6 +16,11 @@ class PersonalEspecializado:
         self.fecha_ingreso = fecha_ingreso if fecha_ingreso is not None else datetime.date.today()
         if self.fecha_ingreso > datetime.date.today():
             raise ValueError("La fecha de ingreso no puede ser futura")
+        # Cola FIFO de programas pendientes de atender (se van sumando al asignarlo a un
+        # programa con ProgramaIntervencion.asignar_personal). Arranca siempre vacía; si se
+        # está restaurando desde un archivo guardado, SIMPIA.cargar() la vuelve a llenar
+        # en una segunda pasada (necesita que las maquinarias ya existan).
+        self.cola_trabajos_pendientes = ColaProgramasTrabajo()
 
     def ocupar(self):
 
@@ -59,6 +65,12 @@ class PersonalEspecializado:
             "fecha_nacimiento": self.fecha_nacimiento.isoformat(),
             "disponibilidad": self.disponibilidad,
             "fecha_ingreso": self.fecha_ingreso.isoformat(),
+            # ProgramaIntervencion no tiene id propio: cada pendiente se referencia por
+            # su maquinaria + la posición en maquinaria.programas (igual que EventoPreventivo).
+            "cola_trabajos_pendientes": [
+                {"maquinaria_id": p.maquinaria.id_unico, "programa_indice": p.maquinaria.programas.index(p)}
+                for p in self.cola_trabajos_pendientes.recorrer()
+            ],
         }
 
     @classmethod
@@ -80,7 +92,25 @@ class PersonalEspecializado:
         self.cola_trabajos_pendientes.set_encolar_programa(programa)
 
     def get_ejecutar_siguiente_trabajo(self):
-        """Atiende y ejecuta el primer programa que ingresó a su cola."""
-        programa = self.cola_trabajos_pendientes.get_desencolar_programa()
-        programa.finalizar()  # Ejecuta / finaliza la intervención
-        return programa
+        """Atiende el próximo programa pendiente de la cola: lo inicia y lo finaliza.
+
+        Un mismo programa puede tener varios técnicos asignados (cada uno con el programa
+        en su propia cola); si otro técnico ya lo inició o finalizó, ya no sirve de nada acá
+        -> se descarta sin avisar y se sigue con el próximo. Si falla por otro motivo real
+        (falta stock, otro técnico asignado está ocupado, etc.) el programa NO se pierde:
+        queda al frente de la cola para reintentar más tarde, en vez de desaparecer.
+        """
+        while True:
+            if self.cola_trabajos_pendientes.get_esta_vacia():
+                raise ValueError(f"{self.nombre} {self.apellido} no tiene trabajos pendientes.")
+
+            programa = self.cola_trabajos_pendientes.get_proximo_programa()
+            if programa.estado != EstadoProgramaIntervencion.PROGRAMADO:
+                # Quedó obsoleto: otro técnico asignado al mismo programa ya lo atendió.
+                self.cola_trabajos_pendientes.get_desencolar_programa()
+                continue
+
+            programa.set_estado(EstadoProgramaIntervencion.EN_EJECUCION)  # puede fallar (stock, otro técnico ocupado)
+            self.cola_trabajos_pendientes.get_desencolar_programa()  # recién se saca si arrancó bien
+            programa.finalizar()
+            return programa

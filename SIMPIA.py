@@ -173,6 +173,16 @@ class SIMPIA:
                     evento = EventoPreventivo.from_dict(ed, programa, sistema.personal, sistema.componentes)
                 maquinaria.historial.append(evento)
 
+        # 3) Segunda pasada: la cola de trabajos pendientes de cada técnico referencia
+        #    programas que viven adentro de una maquinaria -> recién ahora, con todas las
+        #    maquinarias y programas ya reconstruidos, se puede resolver esa referencia.
+        for pd in datos.get("personal", []):
+            tecnico = sistema.personal[pd["id"]]
+            for entrada in pd.get("cola_trabajos_pendientes", []):
+                maquinaria = sistema.maquinas[entrada["maquinaria_id"]]
+                programa = maquinaria.programas[entrada["programa_indice"]]
+                tecnico.cola_trabajos_pendientes.set_encolar_programa(programa)
+
         return sistema
 
     

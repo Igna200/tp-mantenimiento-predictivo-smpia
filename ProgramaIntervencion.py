@@ -77,6 +77,8 @@ class ProgramaIntervencion:
         if not tecnico.disponibilidad:
             raise ValueError(f"{tecnico.nombre} ya está ocupado en otra intervención")
         self.personal_asignado.append(tecnico)
+        # El programa pasa a formar parte del plan de trabajo pendiente del técnico
+        tecnico.set_asignar_programa_a_cola(self)
 
     def finalizar(self):
         # Solo se finaliza desde EN_EJECUCION; esto también rechaza un programa ya COMPLETADO

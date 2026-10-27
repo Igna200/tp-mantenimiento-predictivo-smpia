@@ -432,6 +432,7 @@ def main():
             "1": ("Registrar técnico", registrar_personal),
             "2": ("Listar personal", listar_personal),
             "3": ("Dar de baja técnico (despido o renuncia)", dar_de_baja_personal),
+            "4": ("Procesar próximo trabajo pendiente de un técnico", procesar_siguiente_trabajo),
         })
 
 
@@ -531,6 +532,25 @@ def main():
         for programa in programas_afectados:
             print(f"  Se lo quitó del programa '{programa.procedimiento}' de {programa.maquinaria.id_unico}; "
                   f"hay que asignar otro técnico.")
+
+
+    def procesar_siguiente_trabajo():
+        if not sistema.personal:
+            print("No hay personal registrado.")
+            return
+        tecnico = elegir_tecnico()
+        if tecnico is None:
+            return
+        try:
+            # Desencola el próximo programa pendiente del técnico, lo inicia y lo finaliza;
+            # si algún programa en el medio ya lo atendió otro técnico (puede pasar: un
+            # programa admite varios técnicos), lo descarta solo y sigue con el próximo.
+            programa = tecnico.get_ejecutar_siguiente_trabajo()
+        except ValueError as e:
+            print(f"Error: {e}")
+            return
+        print(f"{tecnico.nombre} {tecnico.apellido} atendió y finalizó: '{programa.procedimiento}' "
+              f"en {programa.maquinaria.id_unico}.")
 
 
     # ---------- 4. Componentes de recambio ----------

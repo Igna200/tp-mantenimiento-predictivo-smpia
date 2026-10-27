@@ -41,3 +41,13 @@ class ColaProgramasTrabajo:
     def get_esta_vacia(self) -> bool:
         """Método getter: Indica si la cola no tiene trabajos pendientes."""
         return self.frente is None
+
+    def recorrer(self):
+        """Devuelve los elementos en orden (del frente al final) SIN sacarlos de la cola.
+        Se usa para guardar la cola en el archivo de persistencia sin vaciarla."""
+        elementos = []
+        actual = self.frente
+        while actual is not None:
+            elementos.append(actual.dato)
+            actual = actual.siguiente
+        return elementos
