@@ -77,7 +77,9 @@ class SIMPIA:
         return tecnico, periodo, programas_afectados
 
     def buscar_maquinaria(self, id_unico):
-        return self.maquinas.get(id_unico)
+        # Las claves de self.maquinas ya están normalizadas (se normalizan en Maquinaria.__init__);
+        # acá normalizamos el ID buscado de la misma forma, así da igual cómo lo haya tipeado el usuario.
+        return self.maquinas.get(Maquinaria.normalizar_id(id_unico))
 
     def buscar_personal(self, id):
         return self.personal.get(id)
