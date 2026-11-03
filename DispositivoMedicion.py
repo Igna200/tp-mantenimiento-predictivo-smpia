@@ -3,6 +3,11 @@ from estados.EstadoAviso import EstadoAviso
 from estados.EstadoSeveridad import EstadoSeveridad
 from Aviso import Aviso
 from Maquinaria import Maquinaria
+
+# No hay subclases por tipo de dispositivo (ej. DispositivoTemperatura, DispositivoVibracion):
+# la regla de anomalía (valor > umbral_limite) es genérica y hoy no difiere según la variable
+# monitoreada. Justificación completa y el punto de extensión identificado (es_anomalo()
+# como método de plantilla) en README.md -> "Decisiones de Diseño".
 class DispositivoMedicion:
     def __init__(self, id: int, maquinaria: Maquinaria, tipo_de_variable: str, umbral_limite: float):
         if not isinstance(maquinaria, Maquinaria):

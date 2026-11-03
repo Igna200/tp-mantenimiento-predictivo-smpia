@@ -1,3 +1,6 @@
+# No hay subclases por categoría de componente: todas comparten exactamente la misma
+# lógica de stock, así que una categoría nueva se agrega como dato (otro "nombre"), no
+# como clase. Justificación completa en README.md -> "Decisiones de Diseño".
 class ComponenteRecambio:
     def __init__(self,id:int, nombre:str,cantidad:int):
         self.id=id

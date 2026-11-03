@@ -31,6 +31,18 @@ Es obligatorio utilizar Programación Orientada a Objetos (POO) para la resoluci
 7.  El personal capacitado tiene áreas de conocimiento específicas. Solo pueden ser asignados a un programa de intervención o ejecutarlo si su especialidad coincide con los requisitos de la maquinaria o la naturaleza de la anomalía. De lo contrario, el sistema debe señalar la incompatibilidad del personal.
 8.  Cada vez que una maquinaria pasa a un estado de falla o se completa un programa de intervención de tipo correctivo, es fundamental que quede un registro detallado en el historial de eventos, detallando la fecha, la descripción del problema, el personal que intervino y los componentes de recambio utilizados. Al finalizar un programa de intervención correctivo, el aviso asociado debe resolverse automáticamente, y la maquinaria implicada debe volver a considerarse plenamente operativa (si no hay otras condiciones que lo impidan).
 
+## Decisiones de Diseño
+
+### Por qué `DispositivoMedicion` y `ComponenteRecambio` no usan herencia
+
+La consigna pide poder incorporar "nuevas clases de dispositivos de medición... o nuevas categorías de componentes de recambio... sin reingeniería completa" (ver "Situación Hipotética"). Evaluamos resolver esto con herencia ahí también, pero decidimos no hacerlo, aplicando el mismo criterio que sí nos llevó a usar herencia en `ProgramaIntervencion` → `ProgramaCorrectivo`/`ProgramaPreventivo` y en `Evento` → `EventoFalla`/`EventoCorrectivo`/`EventoPreventivo`: **la herencia se justifica cuando el comportamiento cambia según el tipo, no cuando solo cambian los datos.**
+
+- **`ComponenteRecambio`**: una categoría nueva (un rodamiento, una junta, un fusible) no necesita ningún método que se comporte distinto de otro — todas comparten exactamente la misma lógica de stock (`descontar_stock`, `setter_agregar_stock`). El catálogo ya se puede extender hoy sin tocar código, instanciando `ComponenteRecambio` con otro `nombre`. Agregar subclases sin comportamiento propio sería herencia injustificada.
+
+- **`DispositivoMedicion`**: hoy monitorea cualquier variable (`tipo_de_variable` es un dato libre: "temperatura", "presión", "vibración", etc.) con una única regla de anomalía (`valor > umbral_limite`), genérica para cualquier variable. No existe hoy ninguna "lógica de predicción más compleja" que difiera según el tipo de variable y que justifique diferenciar el comportamiento en subclases. El punto de extensión queda identificado para cuando haga falta (por ejemplo, un rango con mínimo y máximo en vez de un único umbral, o detección por variación en vez de valor absoluto): convertir `DispositivoMedicion` en clase base con un método tipo `es_anomalo(valor)` que las subclases sobreescriban, sin tener que tocar `Maquinaria`, `Aviso` ni el resto del sistema — el mismo patrón de método de plantilla que ya usamos en `ProgramaIntervencion.crear_evento_especifico()`.
+
+En los dos casos, la extensibilidad pedida está resuelta a nivel de **datos** (agregar una categoría o variable nueva no requiere tocar código), y el punto de extensión por **comportamiento** queda identificado y documentado para el día que aparezca un caso de uso real que lo justifique, en vez de anticipar una jerarquía de clases sin ningún comportamiento distinto que la motive.
+
 ## Notas
 - Se prohíbe el uso de la librería pandas; el objetivo es evaluar el manejo de estructuras nativas (listas, diccionarios) y la lógica de algoritmos manuales.
 - Es requisito obligatorio presentar un diagrama de flujo previo a la codificación para organizar la arquitectura lógica y prevenir fallos de diseño.
