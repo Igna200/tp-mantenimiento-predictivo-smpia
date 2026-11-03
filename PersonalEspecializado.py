@@ -88,7 +88,7 @@ class PersonalEspecializado:
 
     def set_asignar_programa_a_cola(self, programa):
         """Encola el programa de trabajo en la Cola FIFO del técnico."""
-        # Se asume que la verificación de especialidad/compatibilidad ya fue realizada previamente
+        # verificación de especialidad/compatibilidad ya fue realizada previamente
         self.cola_trabajos_pendientes.set_encolar_programa(programa)
 
     def get_ejecutar_siguiente_trabajo(self):
@@ -106,7 +106,7 @@ class PersonalEspecializado:
 
             programa = self.cola_trabajos_pendientes.get_proximo_programa()
             if programa.estado != EstadoProgramaIntervencion.PROGRAMADO:
-                # Quedó obsoleto: otro técnico asignado al mismo programa ya lo atendió.
+                # Explicar este if y como deja de funcionar en un caso base (no rompe)
                 self.cola_trabajos_pendientes.get_desencolar_programa()
                 continue
 
